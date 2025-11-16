@@ -1,32 +1,49 @@
-// src/bot/state/state.manager.ts
+import { BotState, StateData } from '../types';
 
-export type State = string;
-export type UserId = number;
+type StateHandler = (ctx: any, data: StateData) => Promise<void>;
 
-export type StateHandler = (ctx: any) => Promise<void>;
+class StateManager {
+  private userStates = new Map<number, BotState>();
+  private userData = new Map<number, StateData>();
+  private handlers = new Map<BotState, StateHandler>();
 
-export class StateManager {
-  private userStates = new Map<UserId, State>();
-  private handlers = new Map<State, StateHandler>();
-
-  setState(userId: UserId, state: State) {
+  setState(userId: number, state: BotState, data: StateData = {}): void {
     this.userStates.set(userId, state);
+    this.userData.set(userId, data);
   }
 
-  getState(userId: UserId): State | undefined {
+  getState(userId: number): BotState | undefined {
     return this.userStates.get(userId);
   }
 
-  clearState(userId: UserId) {
-    this.userStates.delete(userId);
+  getData(userId: number): StateData {
+    return this.userData.get(userId) || {};
   }
 
-  register(state: State, handler: StateHandler) {
+  updateData(userId: number, data: Partial<StateData>): void {
+    const currentData = this.getData(userId);
+    this.userData.set(userId, { ...currentData, ...data });
+  }
+
+  clearState(userId: number): void {
+    this.userStates.delete(userId);
+    this.userData.delete(userId);
+  }
+
+  register(state: BotState, handler: StateHandler): void {
     this.handlers.set(state, handler);
   }
 
-  getHandler(state: State): StateHandler | undefined {
-    return this.handlers.get(state);
+  async handleState(userId: number, ctx: any): Promise<boolean> {
+    const state = this.getState(userId);
+    if (!state) return false;
+
+    const handler = this.handlers.get(state);
+    if (!handler) return false;
+
+    const data = this.getData(userId);
+    await handler(ctx, data);
+    return true;
   }
 }
 

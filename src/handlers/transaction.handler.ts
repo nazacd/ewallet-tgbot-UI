@@ -14,7 +14,7 @@ export async function transactionHandler(ctx: BotContext) {
 
   try {
     if (!text) {
-      await ctx.reply("Please enter a valid transaction.");
+      await ctx.reply("Введите корректную транзакцию.");
       return;
     }
 
@@ -23,7 +23,7 @@ export async function transactionHandler(ctx: BotContext) {
 
     if (accounts.length === 0) {
       await ctx.reply(
-        "You don't have any accounts yet. Use /start to create one."
+        "У вас ещё нет счетов. Используйте /start, чтобы создать первый."
       );
       return;
     }
@@ -32,7 +32,7 @@ export async function transactionHandler(ctx: BotContext) {
     const defaultAccount = accounts.find((a) => a.is_default) || accounts[0];
 
     // Parse the transaction using AI
-    await ctx.reply("🤖 Analyzing...");
+    await ctx.reply("🤖 Анализирую...");
 
     const parsed = await apiClient.parseTransaction(
       tgUserId,
@@ -47,26 +47,26 @@ export async function transactionHandler(ctx: BotContext) {
     // Build confirmation message
     const emoji = getTransactionEmoji(parsed.type);
     const categoryEmoji = category ? getCategoryEmoji(category.name) : "📌";
-    const typeText = parsed.type === "income" ? "Income" : "Expense";
+    const typeText = parsed.type === "income" ? "Доход" : "Расход";
 
-    let message = `${emoji} New ${typeText}\n\n`;
-    message += `💰 Amount: ${formatAmount(
+    let message = `${emoji} Новая операция: ${typeText}\n\n`;
+    message += `💰 Сумма: ${formatAmount(
       parsed.amount,
       defaultAccount.currency_code
     )}\n`;
 
     if (category) {
-      message += `${categoryEmoji} Category: ${category.name}\n`;
+      message += `${categoryEmoji} Категория: ${category.name}\n`;
     }
 
-    message += `📊 Account: ${defaultAccount.name}\n`;
+    message += `📊 Счёт: ${defaultAccount.name}\n`;
 
     if (parsed.note) {
-      message += `📝 Note: ${parsed.note}\n`;
+      message += `📝 Комментарий: ${parsed.note}\n`;
     }
 
     if (parsed.confidence < 0.7) {
-      message += `\n⚠️ I'm not very confident about this parsing. Please review carefully.`;
+      message += `\n⚠️ Я не уверен в распознавании. Пожалуйста, проверьте данные.`;
     }
 
     // Store parsed data in state
@@ -79,10 +79,10 @@ export async function transactionHandler(ctx: BotContext) {
       message,
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("✅ Confirm", "tx_confirm"),
-          Markup.button.callback("✏️ Edit", "tx_edit"),
+          Markup.button.callback("✅ Подтвердить", "tx_confirm"),
+          Markup.button.callback("✏️ Редактировать", "tx_edit"),
         ],
-        [Markup.button.callback("❌ Cancel", "tx_cancel")],
+        [Markup.button.callback("❌ Отмена", "tx_cancel")],
       ])
     );
   } catch (error: any) {
@@ -90,15 +90,15 @@ export async function transactionHandler(ctx: BotContext) {
 
     if (error.response?.status === 400) {
       await ctx.reply(
-        "🤔 I couldn't understand that transaction.\n\n" +
-          "Try something like:\n" +
-          '• "Coffee 5000"\n' +
-          '• "Lunch 25000"\n' +
-          '• "Got salary 5000000"\n\n' +
-          "Or use /add for step-by-step entry."
+        "🤔 Я не смог понять эту транзакцию.\n\n" +
+          "Попробуйте, например:\n" +
+          '• "Кофе 5000"\n' +
+          '• "Обед 25000"\n' +
+          '• "Получил зарплату 5000000"\n\n' +
+          "Или используйте /add для пошагового ввода."
       );
     } else {
-      await ctx.reply("❌ Something went wrong. Please try again.");
+      await ctx.reply("❌ Что-то пошло не так. Попробуйте снова.");
     }
   }
 }
@@ -111,7 +111,7 @@ export async function confirmTransactionCallback(ctx: any) {
   await ctx.answerCbQuery();
 
   if (!data.parsedTransaction || !data.accountId) {
-    await ctx.editMessageText("❌ Transaction data expired. Please try again.");
+    await ctx.editMessageText("❌ Данные транзакции устарели. Попробуйте снова.");
     stateManager.clearState(tgUserId);
     return;
   }
@@ -122,7 +122,7 @@ export async function confirmTransactionCallback(ctx: any) {
     const account = accounts.find((a) => a.id === data.accountId);
 
     if (!account) {
-      await ctx.editMessageText("❌ Account not found. Please try again.");
+      await ctx.editMessageText("❌ Счёт не найден. Попробуйте снова.");
       stateManager.clearState(tgUserId);
       return;
     }
@@ -146,8 +146,8 @@ export async function confirmTransactionCallback(ctx: any) {
 
     const emoji = getTransactionEmoji(parsed.type);
     await ctx.editMessageText(
-      `${emoji} Transaction saved!\n\n` +
-        `📊 ${account.name} balance: ${formatAmount(
+      `${emoji} Транзакция сохранена!\n\n` +
+        `📊 Баланс ${account.name}: ${formatAmount(
           updatedAccount?.balance || 0,
           account.currency_code
         )}`
@@ -157,7 +157,7 @@ export async function confirmTransactionCallback(ctx: any) {
   } catch (error: any) {
     console.error("Transaction creation error:", error);
     await ctx.editMessageText(
-      "❌ Failed to save transaction. Please try again."
+      "❌ Не удалось сохранить транзакцию. Попробуйте снова."
     );
     stateManager.clearState(tgUserId);
   }
@@ -168,12 +168,12 @@ export async function editTransactionCallback(ctx: any) {
   await ctx.answerCbQuery();
 
   await ctx.editMessageText(
-    "What would you like to edit?",
+    "Что вы хотите изменить?",
     Markup.inlineKeyboard([
-      [Markup.button.callback("💰 Amount", "tx_edit_amount")],
-      [Markup.button.callback("📁 Category", "tx_edit_category")],
-      [Markup.button.callback("📊 Account", "tx_edit_account")],
-      [Markup.button.callback("« Back", "tx_back")],
+      [Markup.button.callback("💰 Сумму", "tx_edit_amount")],
+      [Markup.button.callback("📁 Категорию", "tx_edit_category")],
+      [Markup.button.callback("📊 Счёт", "tx_edit_account")],
+      [Markup.button.callback("« Назад", "tx_back")],
     ])
   );
 }
@@ -181,14 +181,14 @@ export async function editTransactionCallback(ctx: any) {
 // Cancel transaction callback
 export async function cancelTransactionCallback(ctx: any) {
   await ctx.answerCbQuery();
-  await ctx.editMessageText("❌ Transaction cancelled.");
+  await ctx.editMessageText("❌ Транзакция отменена.");
   stateManager.clearState(ctx.from.id);
 }
 
 // Edit amount callback
 export async function editAmountCallback(ctx: any) {
   await ctx.answerCbQuery();
-  await ctx.editMessageText("💰 Enter the new amount:");
+  await ctx.editMessageText("💰 Введите новую сумму:");
 
   stateManager.setState(ctx.from.id, "WAIT_TRANSACTION_EDIT_AMOUNT", {
     ...stateManager.getData(ctx.from.id),
@@ -201,7 +201,7 @@ export async function editAmountHandler(ctx: any, data: any) {
   const amount = Number(amountText);
 
   if (isNaN(amount) || amount <= 0) {
-    await ctx.reply("Please enter a valid positive number.");
+    await ctx.reply("Введите корректное положительное число.");
     return;
   }
 
@@ -219,13 +219,13 @@ export async function editAmountHandler(ctx: any, data: any) {
     const account = accounts.find((a) => a.id === data.accountId);
 
     await ctx.reply(
-      `✅ Amount updated to ${formatAmount(amount, account?.currency_code)}`,
+      `✅ Сумма обновлена: ${formatAmount(amount, account?.currency_code)}`,
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("✅ Confirm", "tx_confirm"),
-          Markup.button.callback("✏️ Edit More", "tx_edit"),
+          Markup.button.callback("✅ Подтвердить", "tx_confirm"),
+          Markup.button.callback("✏️ Редактировать ещё", "tx_edit"),
         ],
-        [Markup.button.callback("❌ Cancel", "tx_cancel")],
+        [Markup.button.callback("❌ Отмена", "tx_cancel")],
       ])
     );
   }

@@ -2,29 +2,29 @@ import { BotContext } from '../types';
 
 export async function helpHandler(ctx: BotContext) {
   const helpText = `
-📚 *E-Wallet Bot Commands*
+📚 *Команды бота E-Wallet*
 
-*Quick Transaction Entry:*
-Just send a message like:
-• "Coffee 5000"
-• "Lunch with colleagues 25000"
-• "Got salary 5000000"
-• Or send a voice message! 🎤
+*Быстрый ввод транзакций:*
+Просто отправьте сообщение вроде:
+• "Кофе 5000"
+• "Обед с коллегами 25000"
+• "Получил зарплату 5000000"
+• Или пришлите голосовое сообщение! 🎤
 
-*Commands:*
-/start - Start the bot or create first account
-/balance - Check your account balances
-/history - View recent transactions
-/accounts - Manage your accounts
-/help - Show this help message
+*Команды:*
+/start - Запуск бота или создание первого счёта
+/balance - Проверить балансы
+/history - Смотреть последние транзакции
+/accounts - Управлять счетами
+/help - Показать эту подсказку
 
-*Tips:*
-✅ Natural language works! "Taxi yesterday 15000"
-✅ The bot will ask you to confirm before saving
-✅ You can edit transactions before confirming
-✅ Set a default account for quick entries
+*Подсказки:*
+✅ Понимаю обычный язык! "Такси вчера 15000"
+✅ Перед сохранением попрошу подтверждение
+✅ Можно отредактировать данные до подтверждения
+✅ Назначьте счёт по умолчанию для быстрого ввода
 
-Need help? Just ask! 😊
+Нужна помощь? Просто скажите! 😊
   `.trim();
 
   await ctx.reply(helpText, { parse_mode: 'Markdown' });

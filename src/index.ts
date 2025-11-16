@@ -70,35 +70,35 @@ bot.on('text', async (ctx) => {
 // Voice message handler (for future implementation)
 bot.on('voice', async (ctx) => {
   await ctx.reply(
-    '🎤 Voice messages will be supported soon!\n' +
-    'For now, please type your transaction.'
+    '🎤 Голосовые сообщения скоро будут доступны!\n' +
+    'Пока что, пожалуйста, введите вашу транзакцию текстом.'
   );
 });
 
 // Error handling
 bot.catch((err, ctx) => {
-  console.error('Bot error:', err);
-  ctx.reply('❌ An error occurred. Please try again.').catch(() => {});
+  console.error('Ошибка бота:', err);
+  ctx.reply('❌ Произошла ошибка. Попробуйте снова.').catch(() => {});
 });
 
 // Launch bot
 bot.launch()
   .then(() => {
-    console.log('✅ Bot started successfully!');
-    console.log(`📡 API Base URL: ${config.apiBaseUrl}`);
+    console.log('✅ Бот успешно запущен!');
+    console.log(`📡 Базовый URL API: ${config.apiBaseUrl}`);
   })
   .catch((err) => {
-    console.error('❌ Failed to start bot:', err);
+    console.error('❌ Не удалось запустить бота:', err);
     process.exit(1);
   });
 
 // Graceful shutdown
 process.once('SIGINT', () => {
-  console.log('Stopping bot...');
+  console.log('Останавливаю бота...');
   bot.stop('SIGINT');
 });
 
 process.once('SIGTERM', () => {
-  console.log('Stopping bot...');
+  console.log('Останавливаю бота...');
   bot.stop('SIGTERM');
 });

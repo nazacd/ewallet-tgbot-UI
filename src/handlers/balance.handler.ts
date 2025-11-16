@@ -10,12 +10,12 @@ export async function balanceHandler(ctx: BotContext) {
 
     if (accounts.length === 0) {
       await ctx.reply(
-        'You don\'t have any accounts yet. Use /start to create one.'
+        'У вас ещё нет счетов. Используйте /start, чтобы создать первый.'
       );
       return;
     }
 
-    let message = '💰 Your Balances:\n\n';
+    let message = '💰 Ваши балансы:\n\n';
 
     // Calculate total balance (all in same currency for now)
     let total = 0;
@@ -28,12 +28,12 @@ export async function balanceHandler(ctx: BotContext) {
     });
 
     if (accounts.length > 1) {
-      message += `\n📊 Total: ${formatAmount(total, currencyCode)}`;
+      message += `\n📊 Итого: ${formatAmount(total, currencyCode)}`;
     }
 
     await ctx.reply(message);
   } catch (error: any) {
     console.error('Balance handler error:', error);
-    await ctx.reply('❌ Failed to fetch balances. Please try again.');
+    await ctx.reply('❌ Не удалось получить балансы. Попробуйте снова.');
   }
 }

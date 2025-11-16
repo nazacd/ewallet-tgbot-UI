@@ -44,7 +44,7 @@ class APIClient {
       if (error.response?.status === 401) {
         // Token expired, clear it
         authService.clearToken(tgUserId);
-        throw new Error('Authentication expired. Please try again.');
+        throw new Error('Сессия истекла. Попробуйте снова.');
       }
       throw error;
     }

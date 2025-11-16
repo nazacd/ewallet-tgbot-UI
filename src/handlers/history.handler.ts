@@ -12,9 +12,9 @@ export async function historyHandler(ctx: BotContext) {
 
     if (transactions.length === 0) {
       await ctx.reply(
-        '📜 No transactions yet.\n\n' +
-        'Add your first transaction by sending a message like:\n' +
-        '"Coffee 5000"'
+        '📜 Пока нет ни одной транзакции.\n\n' +
+        'Добавьте первую, отправив сообщение вроде:\n' +
+        '"Кофе 5000"'
       );
       return;
     }
@@ -22,7 +22,7 @@ export async function historyHandler(ctx: BotContext) {
     const categories = await apiClient.getCategories(tgUserId);
     const accounts = await apiClient.getAccounts(tgUserId);
 
-    let message = '📜 Recent Transactions:\n\n';
+    let message = '📜 Недавние транзакции:\n\n';
 
     // Group by date
     const grouped = groupByDate(transactions);
@@ -48,7 +48,7 @@ export async function historyHandler(ctx: BotContext) {
     await ctx.reply(message);
   } catch (error: any) {
     console.error('History handler error:', error);
-    await ctx.reply('❌ Failed to fetch transaction history. Please try again.');
+    await ctx.reply('❌ Не удалось загрузить историю транзакций. Попробуйте снова.');
   }
 }
 
@@ -66,11 +66,11 @@ function groupByDate(transactions: any[]): Record<string, any[]> {
     
     let key: string;
     if (isToday) {
-      key = 'Today';
+      key = 'Сегодня';
     } else if (isYesterday) {
-      key = 'Yesterday';
+      key = 'Вчера';
     } else {
-      key = txDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      key = txDate.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
     }
     
     if (!groups[key]) {

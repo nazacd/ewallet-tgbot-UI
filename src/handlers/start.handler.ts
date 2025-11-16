@@ -22,10 +22,10 @@ export async function startHandler(ctx: BotContext) {
     if (accounts.length === 0) {
       // Start onboarding
       await ctx.reply(
-        '👋 Welcome to E-Wallet!\n\n' +
-        'Let\'s set up your first account. This could be your cash wallet, bank card, or savings account.\n\n' +
-        '📝 What would you like to name this account?\n' +
-        '(e.g., "Cash", "Main Card", "Savings")',
+        '👋 Добро пожаловать в E-Wallet!\n\n' +
+        'Давайте настроим ваш первый счёт. Это может быть кошелёк наличных, банковская карта или накопительный счёт.\n\n' +
+        '📝 Как бы вы хотели назвать этот счёт?\n' +
+        '(например, "Наличные", "Основная карта", "Сбережения")',
         Markup.removeKeyboard()
       );
       
@@ -35,16 +35,16 @@ export async function startHandler(ctx: BotContext) {
       const user = await apiClient.getMe(tgUserId);
       
       await ctx.reply(
-        `Welcome back, ${ctx.from.first_name}! 👋\n\n` +
-        'Send me a transaction like:\n' +
-        '• "Coffee 5000"\n' +
-        '• "Lunch 25000"\n' +
-        '• "Got salary 5000000"\n\n' +
-        'Or use commands:\n' +
-        '/balance - Check balances\n' +
-        '/history - Recent transactions\n' +
-        '/accounts - Manage accounts\n' +
-        '/help - Show all commands',
+        `С возвращением, ${ctx.from.first_name}! 👋\n\n` +
+        'Отправьте мне транзакцию, например:\n' +
+        '• "Кофе 5000"\n' +
+        '• "Обед 25000"\n' +
+        '• "Получил зарплату 5000000"\n\n' +
+        'Или используйте команды:\n' +
+        '/balance - Проверить балансы\n' +
+        '/history - Последние транзакции\n' +
+        '/accounts - Управление счетами\n' +
+        '/help - Справка по командам',
         Markup.removeKeyboard()
       );
       
@@ -53,7 +53,7 @@ export async function startHandler(ctx: BotContext) {
   } catch (error: any) {
     console.error('Start handler error:', error);
     await ctx.reply(
-      '❌ Sorry, something went wrong. Please try again later.'
+      '❌ Извините, что-то пошло не так. Попробуйте позже.'
     );
   }
 }
@@ -63,7 +63,7 @@ export async function onboardingAccountNameHandler(ctx: any, data: any) {
   const accountName = ctx.message.text.trim();
   
   if (!accountName || accountName.length > 50) {
-    await ctx.reply('Please enter a valid account name (max 50 characters).');
+    await ctx.reply('Введите корректное имя счёта (не более 50 символов).');
     return;
   }
 
@@ -73,8 +73,8 @@ export async function onboardingAccountNameHandler(ctx: any, data: any) {
   });
 
   await ctx.reply(
-    `Great! Now, what currency will this account use?\n\n` +
-    'Common options:',
+    `Отлично! Какая валюта будет у этого счёта?\n\n` +
+    'Популярные варианты:',
     Markup.inlineKeyboard([
       [
         Markup.button.callback('🇺🇿 UZS', 'currency_UZS'),
@@ -104,9 +104,9 @@ export async function onboardingCurrencyCallback(ctx: any) {
   });
 
   await ctx.reply(
-    `Perfect! Currency set to ${currency}.\n\n` +
-    '💰 What\'s the current balance in this account?\n' +
-    '(Enter a number, or send 0 if starting fresh)'
+    `Готово! Валюта установлена: ${currency}.\n\n` +
+    '💰 Какой текущий баланс на этом счёте?\n' +
+    '(Введите число или отправьте 0, если начинаете с нуля)'
   );
 }
 
@@ -116,7 +116,7 @@ export async function onboardingBalanceHandler(ctx: any, data: any) {
   const balance = Number(balanceText);
 
   if (isNaN(balance) || balance < 0) {
-    await ctx.reply('Please enter a valid number (0 or positive).');
+    await ctx.reply('Введите корректное число (0 или больше).');
     return;
   }
 
@@ -124,7 +124,7 @@ export async function onboardingBalanceHandler(ctx: any, data: any) {
   const { name, currency } = data.onboardingData || {};
 
   if (!name || !currency) {
-    await ctx.reply('Something went wrong. Let\'s start over with /start');
+    await ctx.reply('Что-то пошло не так. Давайте начнём заново с /start');
     stateManager.clearState(tgUserId);
     return;
   }
@@ -139,21 +139,21 @@ export async function onboardingBalanceHandler(ctx: any, data: any) {
     });
 
     await ctx.reply(
-      `✅ Account created successfully!\n\n` +
+      `✅ Счёт успешно создан!\n\n` +
       `📊 ${account.name}\n` +
-      `💰 Balance: ${balance.toLocaleString()} ${currency}\n\n` +
-      `You're all set! Try adding your first transaction:\n` +
-      `• "Coffee 5000"\n` +
-      `• "Lunch with friends 25000"\n` +
-      `• "Got salary 5000000"\n\n` +
-      `Or send a voice message! 🎤`
+      `💰 Баланс: ${balance.toLocaleString()} ${currency}\n\n` +
+      `Всё готово! Попробуйте добавить первую транзакцию:\n` +
+      `• "Кофе 5000"\n` +
+      `• "Ужин с друзьями 25000"\n` +
+      `• "Получил зарплату 5000000"\n\n` +
+      `Или отправьте голосовое сообщение! 🎤`
     );
 
     stateManager.clearState(tgUserId);
   } catch (error: any) {
     console.error('Account creation error:', error);
     await ctx.reply(
-      '❌ Failed to create account. Please try again with /start'
+      '❌ Не удалось создать счёт. Попробуйте снова с /start'
     );
     stateManager.clearState(tgUserId);
   }

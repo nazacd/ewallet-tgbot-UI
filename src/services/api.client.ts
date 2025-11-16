@@ -82,7 +82,6 @@ class APIClient {
     data: {
       name: string;
       balance?: number;
-      currency_code: string;
       is_default?: boolean
     }
   ): Promise<Account> {

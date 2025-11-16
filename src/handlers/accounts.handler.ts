@@ -9,6 +9,8 @@ export async function accountsHandler(ctx: BotContext) {
 
   try {
     const accounts = await apiClient.getAccounts(tgUserId);
+    const user = await apiClient.getMe(tgUserId);
+    const currencyCode = user.currency_code || 'USD';
 
     if (accounts.length === 0) {
       await ctx.reply(
@@ -19,11 +21,10 @@ export async function accountsHandler(ctx: BotContext) {
 
     let message = '📊 Ваши счета:\n\n';
     let total = 0;
-    const currencyCode = accounts[0].currency_code;
 
     accounts.forEach(account => {
       const star = account.is_default ? '⭐️ ' : '';
-      message += `${star}${account.name} - ${formatAmount(account.balance, account.currency_code)}\n`;
+      message += `${star}${account.name} - ${formatAmount(account.balance, currencyCode)}\n`;
       total += account.balance;
     });
 
@@ -104,7 +105,6 @@ export async function accountBalanceHandler(ctx: any, data: any) {
 
     const account = await apiClient.createAccount(tgUserId, {
       name,
-      currency_code: currencyCode,
       balance,
       is_default: false,
     });
@@ -163,6 +163,9 @@ export async function viewAccountCallback(ctx: any) {
     const accounts = await apiClient.getAccounts(tgUserId);
     const account = accounts.find(a => a.id === accountId);
 
+    const user = await apiClient.getMe(tgUserId);
+    const currencyCode = user.currency_code || 'USD';
+
     if (!account) {
       await ctx.editMessageText('❌ Счёт не найден.');
       return;
@@ -170,7 +173,7 @@ export async function viewAccountCallback(ctx: any) {
 
     const message = 
       `📊 ${account.name}\n\n` +
-      `💰 Баланс: ${formatAmount(account.balance, account.currency_code)}\n` +
+      `💰 Баланс: ${formatAmount(account.balance, currencyCode)}\n` +
       `${account.is_default ? '⭐️ Счёт по умолчанию' : ''}`;
 
     const buttons = [];

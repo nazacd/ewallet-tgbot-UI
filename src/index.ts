@@ -11,6 +11,11 @@ import {
   editTransactionCallback,
   cancelTransactionCallback,
   editAmountCallback,
+  editCategoryCallback,
+  editAccountCallback,
+  backToConfirmCallback,
+  selectCategoryCallback,
+  selectAccountCallback,
 } from './handlers/transaction.handler';
 import { balanceHandler } from './handlers/balance.handler';
 import { historyHandler } from './handlers/history.handler';
@@ -46,6 +51,11 @@ bot.action('tx_confirm', confirmTransactionCallback);
 bot.action('tx_edit', editTransactionCallback);
 bot.action('tx_cancel', cancelTransactionCallback);
 bot.action('tx_edit_amount', editAmountCallback);
+bot.action('tx_edit_category', editCategoryCallback);
+bot.action('tx_edit_account', editAccountCallback);
+bot.action('tx_back', backToConfirmCallback);
+bot.action(/^tx_select_category_(\d+)$/, selectCategoryCallback);
+bot.action(/^tx_select_account_(\d+)$/, selectAccountCallback);
 
 bot.action('acc_add', addAccountCallback);
 bot.action('acc_manage', manageAccountsCallback);
@@ -66,6 +76,7 @@ bot.on('text', async (ctx) => {
   // Otherwise, treat as transaction input
   await transactionHandler(ctx);
 });
+
 
 // Voice message handler (for future implementation)
 bot.on('voice', async (ctx) => {

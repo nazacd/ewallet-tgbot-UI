@@ -19,11 +19,12 @@ export async function balanceHandler(ctx: BotContext) {
 
     // Calculate total balance (all in same currency for now)
     let total = 0;
-    const currencyCode = accounts[0].currency_code;
+    const user = await apiClient.getMe(tgUserId);
+    const currencyCode = user.currency_code || 'USD';
 
     accounts.forEach(account => {
       const emoji = account.is_default ? '⭐️' : '💵';
-      message += `${emoji} ${account.name}: ${formatAmount(account.balance, account.currency_code)}\n`;
+      message += `${emoji} ${account.name}: ${formatAmount(account.balance, currencyCode)}\n`;
       total += account.balance;
     });
 

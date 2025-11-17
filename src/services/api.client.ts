@@ -24,7 +24,7 @@ class APIClient {
     tgUserId: number,
     requestConfig: AxiosRequestConfig
   ): Promise<T> {
-    const token = authService.getToken(tgUserId);
+    const token = await authService.getToken(tgUserId);
 
     if (!token) {
       throw new Error('User not authenticated');
@@ -43,7 +43,7 @@ class APIClient {
     } catch (error: any) {
       if (error.response?.status === 401) {
         // Token expired, clear it
-        authService.clearToken(tgUserId);
+        await authService.clearToken(tgUserId);
         throw new Error('Сессия истекла. Попробуйте снова.');
       }
       throw error;

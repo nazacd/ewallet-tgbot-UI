@@ -8,6 +8,48 @@ import {
   getCategoryEmoji,
 } from "../utils/format";
 
+async function editMenu(data: any, tgUserId: any) {
+
+  const parsed = data.parsedTransaction;  
+  const user = await apiClient.getMe(tgUserId);
+
+  const currencyCode = user.currency_code || 'USD';
+
+  const accounts = await apiClient.getAccounts(tgUserId);
+  const account = accounts.find((a) => a.id === data.accountId);
+
+  const categories = await apiClient.getCategories(tgUserId);
+  const category = categories.find((c) => c.id === data.parsedTransaction?.category_id);
+
+  
+  const emoji = getTransactionEmoji(parsed.type);
+  const categoryEmoji = category ? getCategoryEmoji(category.name) : "📌";
+  const typeText = parsed.type === "income" ? "Доход" : "Расход";
+
+  let message = `${emoji} Новая операция: ${typeText}\n\n`;
+  message += `💰 Сумма: ${formatAmount(parsed.amount, currencyCode)}\n`;
+
+  if (category) {
+    message += `${categoryEmoji} Категория: ${category.name}\n`;
+  }
+
+  if (account) {
+    message += `📊 Счёт: ${account.name}\n`;
+  }
+
+  if (parsed.note) {
+    message += `📝 Комментарий: ${parsed.note}\n`;
+  }
+
+  if (parsed.confidence < 0.7) {
+    message += `\n⚠️ Я не уверен в распознавании. Пожалуйста, проверьте данные.`;
+  }
+
+  return message;
+
+}
+
+
 export async function transactionHandler(ctx: BotContext) {
   const tgUserId = ctx.from.id;
   const text = ctx.text;
@@ -41,8 +83,8 @@ export async function transactionHandler(ctx: BotContext) {
       text,
       ctx.from.language_code
     );
+   const user = await apiClient.getMe(tgUserId);
 
-    const user = await apiClient.getMe(tgUserId);
     const currencyCode = user.currency_code || 'USD';
 
     // Get categories to find the category name
@@ -265,6 +307,9 @@ export async function editAccountCallback(ctx: any) {
 
     buttons.push([Markup.button.callback("« Назад", "tx_back")]);
 
+    console.log(buttons);
+    
+
     await ctx.editMessageText(
       "📊 Выберите счёт:",
       Markup.inlineKeyboard(buttons)
@@ -289,38 +334,7 @@ export async function backToConfirmCallback(ctx: any) {
   }
 
   try {
-    const user = await apiClient.getMe(tgUserId);
-    const currencyCode = user.currency_code || 'USD';
-
-    const accounts = await apiClient.getAccounts(tgUserId);
-    const account = accounts.find((a) => a.id === data.accountId);
-
-    const categories = await apiClient.getCategories(tgUserId);
-    const category = categories.find((c) => c.id === data.parsedTransaction?.category_id);
-
-    const parsed = data.parsedTransaction;
-    const emoji = getTransactionEmoji(parsed.type);
-    const categoryEmoji = category ? getCategoryEmoji(category.name) : "📌";
-    const typeText = parsed.type === "income" ? "Доход" : "Расход";
-
-    let message = `${emoji} Новая операция: ${typeText}\n\n`;
-    message += `💰 Сумма: ${formatAmount(parsed.amount, currencyCode)}\n`;
-
-    if (category) {
-      message += `${categoryEmoji} Категория: ${category.name}\n`;
-    }
-
-    if (account) {
-      message += `📊 Счёт: ${account.name}\n`;
-    }
-
-    if (parsed.note) {
-      message += `📝 Комментарий: ${parsed.note}\n`;
-    }
-
-    if (parsed.confidence < 0.7) {
-      message += `\n⚠️ Я не уверен в распознавании. Пожалуйста, проверьте данные.`;
-    }
+    const message = await editMenu(data, tgUserId)
 
     stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
@@ -362,13 +376,16 @@ export async function selectCategoryCallback(ctx: any) {
       await ctx.editMessageText("❌ Категория не найдена.");
       return;
     }
-
     // Update parsed transaction with new category
     data.parsedTransaction.category_id = categoryId;
+
+    const message = await editMenu(data, tgUserId)
+
     stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
     await ctx.editMessageText(
-      `✅ Категория обновлена: ${getCategoryEmoji(category.name)} ${category.name}`,
+      `✅ Категория обновлена: ${getCategoryEmoji(category.name)} ${category.name}\n\n`+
+      message,
       Markup.inlineKeyboard([
         [
           Markup.button.callback("✅ Подтвердить", "tx_confirm"),
@@ -406,14 +423,17 @@ export async function selectAccountCallback(ctx: any) {
       return;
     }
 
+   
     // Update account ID
     data.accountId = accountId;
-    console.log(data);
     
+    const message = await editMenu(data, tgUserId)
+
     stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
     await ctx.editMessageText(
-      `✅ Счёт обновлён: ${account.name}`,
+      `✅ Счёт обновлён: ${account.name}\n\n`+
+      message,
       Markup.inlineKeyboard([
         [
           Markup.button.callback("✅ Подтвердить", "tx_confirm"),
@@ -438,29 +458,36 @@ export async function editAmountHandler(ctx: any, data: any) {
     return;
   }
 
-  // Update parsed transaction with new amount
-  const parsed = data.parsedTransaction;
-  if (parsed) {
-    parsed.amount = amount;
-    stateManager.setState(ctx.from.id, "WAIT_TRANSACTION_CONFIRM", {
-      ...data,
-      parsedTransaction: parsed,
-    });
+  try {
+    const parsed = data.parsedTransaction;
+    if (parsed) {
+      parsed.amount = amount;
+      stateManager.setState(ctx.from.id, "WAIT_TRANSACTION_CONFIRM", {
+        ...data,
+        parsedTransaction: parsed,
+      });
 
-    // Get account for currency
-    const user = await apiClient.getMe(ctx.from.id);
-    const currencyCode = user.currency_code || 'USD';
+      const message = await editMenu(data, ctx.from.id)
 
-    await ctx.reply(
-      `✅ Сумма обновлена: ${formatAmount(amount, currencyCode)}`,
-      Markup.inlineKeyboard([
-        [
-          Markup.button.callback("✅ Подтвердить", "tx_confirm"),
-          Markup.button.callback("✏️ Редактировать ещё", "tx_edit"),
-        ],
-        [Markup.button.callback("❌ Отмена", "tx_cancel")],
-      ])
-    );
+      // Get account for currency
+      const user = await apiClient.getMe(ctx.from.id);
+      const currencyCode = user.currency_code || 'USD';
+
+      await ctx.reply(
+        `✅ Сумма обновлена: ${formatAmount(amount, currencyCode)}\n\n` + message,
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback("✅ Подтвердить", "tx_confirm"),
+            Markup.button.callback("✏️ Редактировать ещё", "tx_edit"),
+          ],
+          [Markup.button.callback("❌ Отмена", "tx_cancel")],
+        ])
+      );
+    }
+    
+  } catch (error) {
+    console.error("Error selecting account:", error);
+    await ctx.editMessageText("❌ Произошла ошибка. Попробуйте снова.");
   }
 }
 

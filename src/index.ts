@@ -54,8 +54,8 @@ bot.action('tx_edit_amount', editAmountCallback);
 bot.action('tx_edit_category', editCategoryCallback);
 bot.action('tx_edit_account', editAccountCallback);
 bot.action('tx_back', backToConfirmCallback);
-bot.action(/^tx_select_category_(\d+)$/, selectCategoryCallback);
-bot.action(/^tx_select_account_(\d+)$/, selectAccountCallback);
+bot.action(/^tx_select_category_(.+)$/, selectCategoryCallback);
+bot.action(/^tx_select_account_(.+)$/, selectAccountCallback);
 
 bot.action('acc_add', addAccountCallback);
 bot.action('acc_manage', manageAccountsCallback);

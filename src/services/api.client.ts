@@ -21,13 +21,15 @@ class APIClient {
   }
 
   private async request<T>(
-    tgUserId: number,
-    requestConfig: AxiosRequestConfig
+    ctx: any,
+    requestConfig: AxiosRequestConfig,
+    isRetry: boolean = false
   ): Promise<T> {
+    const tgUserId = ctx.from.id;
     const token = await authService.getToken(tgUserId);
 
     if (!token) {
-      throw new Error("User not authenticated");
+        throw new Error("User not authenticated");
     }
 
     try {
@@ -41,28 +43,47 @@ class APIClient {
 
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        // Token expired, clear it
-        authService.clearToken(tgUserId);
-        throw new Error("Сессия истекла. Попробуйте снова.");
+      // Handle token expiration (401 or 403)
+      if ((error.response?.status === 401 || error.response?.status === 403) && !isRetry) {
+        try {
+          // Clear expired token
+          await authService.clearToken(tgUserId);
+          
+          // Regenerate token with user data from context
+          const userData = {
+            first_name: ctx.from.first_name,
+            last_name: ctx.from.last_name,
+            username: ctx.from.username,
+            language_code: ctx.from.language_code,
+          };
+          
+          await authService.authenticate(tgUserId, userData);
+          
+          // Retry the request with new token (pass isRetry to prevent infinite loop)
+          return this.request<T>(ctx, requestConfig, true);
+        } catch (refreshError) {
+          console.error("Token refresh failed:", refreshError);
+          throw new Error("Сессия истекла. Попробуйте снова.");
+        }
       }
+      
       throw error;
     }
   }
 
   // User endpoints
-  async getMe(tgUserId: number): Promise<User> {
-    return this.request<User>(tgUserId, {
+  async getMe(ctx: any): Promise<User> {
+    return this.request<User>(ctx, {
       method: "GET",
       url: "/users/me",
     });
   }
 
   async updateMe(
-    tgUserId: number,
+    ctx: any,
     data: { currency_code?: string; language_code?: string }
   ): Promise<User> {
-    return this.request<User>(tgUserId, {
+    return this.request<User>(ctx, {
       method: "PATCH",
       url: "/users/me",
       data,
@@ -70,22 +91,22 @@ class APIClient {
   }
 
   // Account endpoints
-  async getAccounts(tgUserId: number): Promise<Account[]> {
-    return this.request<Account[]>(tgUserId, {
+  async getAccounts(ctx: any): Promise<Account[]> {
+    return this.request<Account[]>(ctx, {
       method: "GET",
       url: "/accounts",
     });
   }
 
   async createAccount(
-    tgUserId: number,
+    ctx: any,
     data: {
       name: string;
       balance?: number;
       is_default?: boolean;
     }
   ): Promise<Account> {
-    return this.request<Account>(tgUserId, {
+    return this.request<Account>(ctx, {
       method: "POST",
       url: "/accounts",
       data,
@@ -93,19 +114,19 @@ class APIClient {
   }
 
   async updateAccount(
-    tgUserId: number,
+    ctx: any,
     accountId: string,
     data: { name?: string; is_default?: boolean }
   ): Promise<Account> {
-    return this.request<Account>(tgUserId, {
+    return this.request<Account>(ctx, {
       method: "PATCH",
       url: `/accounts/${accountId}`,
       data,
     });
   }
 
-  async deleteAccount(tgUserId: number, accountId: string): Promise<void> {
-    return this.request<void>(tgUserId, {
+  async deleteAccount(ctx: any, accountId: string): Promise<void> {
+    return this.request<void>(ctx, {
       method: "DELETE",
       url: `/accounts/${accountId}`,
     });
@@ -113,11 +134,11 @@ class APIClient {
 
   // Transaction endpoints
   async parseTransaction(
-    tgUserId: number,
+    ctx: any,
     text: string,
     languageCode?: string
   ): Promise<ParsedTransaction> {
-    return this.request<ParsedTransaction>(tgUserId, {
+    return this.request<ParsedTransaction>(ctx, {
       method: "POST",
       url: "/parse/text",
       data: { content: text, language_code: languageCode },
@@ -125,7 +146,7 @@ class APIClient {
   }
 
   async createTransaction(
-    tgUserId: number,
+    ctx: any,
     data: {
       account_id: string;
       category_id?: number;
@@ -136,7 +157,7 @@ class APIClient {
       performed_at?: string;
     }
   ): Promise<Transaction> {
-    return this.request<Transaction>(tgUserId, {
+    return this.request<Transaction>(ctx, {
       method: "POST",
       url: "/transactions",
       data,
@@ -144,7 +165,7 @@ class APIClient {
   }
 
   async getTransactions(
-    tgUserId: number,
+    ctx: any,
     params?: {
       account_id?: string;
       category_id?: number;
@@ -161,7 +182,7 @@ class APIClient {
     return this.request<{
       items: Transaction[];
       pagination: { limit: number; offset: number; total: number };
-    }>(tgUserId, {
+    }>(ctx, {
       method: "GET",
       url: "/transactions",
       params,
@@ -169,11 +190,11 @@ class APIClient {
   }
 
   async updateTransaction(
-    tgUserId: number,
+    ctx: any,
     transactionId: string,
     data: Partial<Transaction>
   ): Promise<Transaction> {
-    return this.request<Transaction>(tgUserId, {
+    return this.request<Transaction>(ctx, {
       method: "PUT",
       url: `/transactions/${transactionId}`,
       data,
@@ -181,18 +202,18 @@ class APIClient {
   }
 
   async deleteTransaction(
-    tgUserId: number,
+    ctx: any,
     transactionId: string
   ): Promise<void> {
-    return this.request<void>(tgUserId, {
+    return this.request<void>(ctx, {
       method: "DELETE",
       url: `/transactions/${transactionId}`,
     });
   }
 
   // Category endpoints
-  async getCategories(tgUserId: number): Promise<Category[]> {
-    return this.request<Category[]>(tgUserId, {
+  async getCategories(ctx: any): Promise<Category[]> {
+    return this.request<Category[]>(ctx, {
       method: "GET",
       url: "/categories",
     });
@@ -200,14 +221,14 @@ class APIClient {
 
   // Stats endpoints
   async getStats(
-    tgUserId: number,
+    ctx: any,
     params?: {
       from?: string;
       to?: string;
       account_id?: string;
     }
   ): Promise<TransactionStats> {
-    return this.request<TransactionStats>(tgUserId, {
+    return this.request<TransactionStats>(ctx, {
       method: "GET",
       url: "/stats/summary",
       params,

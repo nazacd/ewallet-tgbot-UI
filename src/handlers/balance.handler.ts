@@ -6,7 +6,7 @@ export async function balanceHandler(ctx: BotContext) {
   const tgUserId = ctx.from.id;
 
   try {
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
 
     if (accounts.length === 0) {
       await ctx.reply(
@@ -19,7 +19,7 @@ export async function balanceHandler(ctx: BotContext) {
 
     // Calculate total balance (all in same currency for now)
     let total = 0;
-    const user = await apiClient.getMe(tgUserId);
+    const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
 
     accounts.forEach(account => {

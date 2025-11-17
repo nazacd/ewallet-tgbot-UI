@@ -8,17 +8,18 @@ import {
   getCategoryEmoji,
 } from "../utils/format";
 
-async function editMenu(data: any, tgUserId: any) {
+async function editMenu(data: any, ctx: any) {
 
   const parsed = data.parsedTransaction;  
-  const user = await apiClient.getMe(tgUserId);
+  const user = await apiClient.getMe(ctx);
+  const tgUserId = ctx.from.id;
 
   const currencyCode = user.currency_code || 'USD';
 
-  const accounts = await apiClient.getAccounts(tgUserId);
+  const accounts = await apiClient.getAccounts(ctx);
   const account = accounts.find((a) => a.id === data.accountId);
 
-  const categories = await apiClient.getCategories(tgUserId);
+  const categories = await apiClient.getCategories(ctx);
   const category = categories.find((c) => c.id === data.parsedTransaction?.category_id);
 
   
@@ -63,7 +64,7 @@ export async function transactionHandler(ctx: BotContext) {
     }
 
     // Get user's accounts
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
 
     if (accounts.length === 0) {
       await ctx.reply(
@@ -79,16 +80,16 @@ export async function transactionHandler(ctx: BotContext) {
     wait_messege = await ctx.reply("🤖 Анализирую...");
 
     const parsed = await apiClient.parseTransaction(
-      tgUserId,
+      ctx,
       text,
       ctx.from.language_code
     );
-   const user = await apiClient.getMe(tgUserId);
+   const user = await apiClient.getMe(ctx);
 
     const currencyCode = user.currency_code || 'USD';
 
     // Get categories to find the category name
-    const categories = await apiClient.getCategories(tgUserId);
+    const categories = await apiClient.getCategories(ctx);
     const category = categories.find((c) => c.id === parsed.category_id);
 
     // Build confirmation message
@@ -145,7 +146,7 @@ export async function transactionHandler(ctx: BotContext) {
           "Или используйте /add для пошагового ввода."
       );
     } else {
-      await ctx.reply("❌ Что-то пошло не так. Попробуйте снова.");
+      await ctx.reply("❌ Что-то пошло не так. Попробуйте начать с /start");
     }
   } finally {
     ctx.deleteMessage(wait_messege?.message_id)
@@ -167,10 +168,10 @@ export async function confirmTransactionCallback(ctx: any) {
 
   try {
     // Get account to get currency
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
     const account = accounts.find((a) => a.id === data.accountId);
 
-    const user = await apiClient.getMe(tgUserId);
+    const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
 
     if (!account) {
@@ -182,7 +183,7 @@ export async function confirmTransactionCallback(ctx: any) {
     const parsed = data.parsedTransaction;
 
     // Create the transaction
-    const transaction = await apiClient.createTransaction(tgUserId, {
+    const transaction = await apiClient.createTransaction(ctx, {
       account_id: data.accountId,
       category_id: parsed.category_id,
       type: parsed.type,
@@ -193,7 +194,7 @@ export async function confirmTransactionCallback(ctx: any) {
     });
 
     // Get updated account balance
-    const updatedAccounts = await apiClient.getAccounts(tgUserId);
+    const updatedAccounts = await apiClient.getAccounts(ctx);
     const updatedAccount = updatedAccounts.find((a) => a.id === data.accountId);
 
     const emoji = getTransactionEmoji(parsed.type);
@@ -255,7 +256,7 @@ export async function editCategoryCallback(ctx: any) {
 
   try {
     // Get all categories
-    const categories = await apiClient.getCategories(tgUserId);
+    const categories = await apiClient.getCategories(ctx);
     
     if (categories.length === 0) {
       await ctx.editMessageText("❌ Категории не найдены. Попробуйте снова.");
@@ -290,7 +291,7 @@ export async function editAccountCallback(ctx: any) {
 
   try {
     // Get all accounts
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
     
     if (accounts.length === 0) {
       await ctx.editMessageText("❌ Счета не найдены. Попробуйте снова.");
@@ -334,7 +335,7 @@ export async function backToConfirmCallback(ctx: any) {
   }
 
   try {
-    const message = await editMenu(data, tgUserId)
+    const message = await editMenu(data, ctx)
 
     stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
@@ -369,7 +370,7 @@ export async function selectCategoryCallback(ctx: any) {
   }
 
   try {
-    const categories = await apiClient.getCategories(tgUserId);
+    const categories = await apiClient.getCategories(ctx);
     const category = categories.find((c) => c.id === categoryId);
 
     if (!category) {
@@ -379,7 +380,7 @@ export async function selectCategoryCallback(ctx: any) {
     // Update parsed transaction with new category
     data.parsedTransaction.category_id = categoryId;
 
-    const message = await editMenu(data, tgUserId)
+    const message = await editMenu(data, ctx)
 
     stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
@@ -415,7 +416,7 @@ export async function selectAccountCallback(ctx: any) {
   }
 
   try {
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
     const account = accounts.find((a) => a.id === accountId);
 
     if (!account) {
@@ -427,7 +428,7 @@ export async function selectAccountCallback(ctx: any) {
     // Update account ID
     data.accountId = accountId;
     
-    const message = await editMenu(data, tgUserId)
+    const message = await editMenu(data, ctx)
 
     stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
@@ -470,7 +471,7 @@ export async function editAmountHandler(ctx: any, data: any) {
       const message = await editMenu(data, ctx.from.id)
 
       // Get account for currency
-      const user = await apiClient.getMe(ctx.from.id);
+      const user = await apiClient.getMe(ctx);
       const currencyCode = user.currency_code || 'USD';
 
       await ctx.reply(

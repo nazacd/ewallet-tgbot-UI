@@ -17,7 +17,7 @@ export async function startHandler(ctx: BotContext) {
     });
 
     // Check if user has account
-    const user = await apiClient.getMe(tgUserId);
+    const user = await apiClient.getMe(ctx);
 
     if (!user.currency_code) {
       // Start onboarding
@@ -48,7 +48,7 @@ export async function startHandler(ctx: BotContext) {
       stateManager.setState(tgUserId, 'ONBOARDING_CURRENCY');
     } else {
       // User already set up
-      const user = await apiClient.getMe(tgUserId);
+      const user = await apiClient.getMe(ctx);
       
       await ctx.reply(
         `С возвращением, ${ctx.from.first_name}! 👋\n\n` +
@@ -79,7 +79,7 @@ export async function onboardingCurrencyCallback(ctx: any) {
   const currency = ctx.match[1]; // Extract currency code from callback data
 
   try {
-    apiClient.updateMe(ctx.from.id, {
+    apiClient.updateMe(ctx, {
       currency_code: currency
     })
   } catch (error) {
@@ -152,7 +152,7 @@ export async function onboardingBalanceHandler(ctx: any, data: any) {
 
   try {
     // Create the account
-    const account = await apiClient.createAccount(tgUserId, {
+    const account = await apiClient.createAccount(ctx, {
       name,
       balance,
       is_default: true,

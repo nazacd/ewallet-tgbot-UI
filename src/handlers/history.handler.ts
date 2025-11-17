@@ -11,7 +11,7 @@ export async function historyHandler(ctx: BotContext) {
   const tgUserId = ctx.from.id;
 
   try {
-    const transactions = await apiClient.getTransactions(tgUserId, {
+    const transactions = await apiClient.getTransactions(ctx, {
       limit: 10,
     });
 
@@ -24,8 +24,8 @@ export async function historyHandler(ctx: BotContext) {
       return;
     }
 
-    const categories = await apiClient.getCategories(tgUserId);
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const categories = await apiClient.getCategories(ctx);
+    const accounts = await apiClient.getAccounts(ctx);
 
     let message = "📜 Недавние транзакции:\n\n";
 

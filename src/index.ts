@@ -30,6 +30,7 @@ import {
   backToAccountsCallback,
 } from './handlers/accounts.handler';
 import { helpHandler } from './handlers/help.handler';
+import { voiceHandler } from './handlers/voice.handler';
 
 // Validate configuration
 config.validate();
@@ -80,10 +81,13 @@ bot.on('text', async (ctx) => {
 
 // Voice message handler (for future implementation)
 bot.on('voice', async (ctx) => {
-  await ctx.reply(
-    '🎤 Голосовые сообщения скоро будут доступны!\n' +
-    'Пока что, пожалуйста, введите вашу транзакцию текстом.'
-  );
+  const userId = ctx.from.id;
+  
+  // Check if user is in a state (multi-step flow)
+  const handled = await stateManager.handleState(userId, ctx);
+  if (handled) return;
+
+  await voiceHandler(ctx);
 });
 
 // Error handling

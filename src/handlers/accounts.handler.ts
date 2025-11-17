@@ -8,8 +8,8 @@ export async function accountsHandler(ctx: BotContext) {
   const tgUserId = ctx.from.id;
 
   try {
-    const accounts = await apiClient.getAccounts(tgUserId);
-    const user = await apiClient.getMe(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
+    const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
 
     if (accounts.length === 0) {
@@ -71,7 +71,7 @@ export async function accountNameHandler(ctx: any, data: any) {
   });
 
   // Get user's currency
-  const user = await apiClient.getMe(ctx.from.id);
+  const user = await apiClient.getMe(ctx);
   const currencyCode = user.currency_code || 'USD';
 
   await ctx.reply(
@@ -100,10 +100,10 @@ export async function accountBalanceHandler(ctx: any, data: any) {
   }
 
   try {
-    const user = await apiClient.getMe(tgUserId);
+    const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
 
-    const account = await apiClient.createAccount(tgUserId, {
+    const account = await apiClient.createAccount(ctx, {
       name,
       balance,
       is_default: false,
@@ -131,7 +131,7 @@ export async function manageAccountsCallback(ctx: any) {
   await ctx.answerCbQuery();
 
   try {
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
 
     const buttons = accounts.map(account => [
       Markup.button.callback(
@@ -160,10 +160,10 @@ export async function viewAccountCallback(ctx: any) {
   await ctx.answerCbQuery();
 
   try {
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
     const account = accounts.find(a => a.id === accountId);
 
-    const user = await apiClient.getMe(tgUserId);
+    const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
 
     if (!account) {
@@ -206,9 +206,9 @@ export async function setDefaultAccountCallback(ctx: any) {
   await ctx.answerCbQuery('Устанавливаю по умолчанию...');
 
   try {
-    await apiClient.updateAccount(tgUserId, accountId, { is_default: true });
+    await apiClient.updateAccount(ctx, accountId, { is_default: true });
     
-    const accounts = await apiClient.getAccounts(tgUserId);
+    const accounts = await apiClient.getAccounts(ctx);
     const account = accounts.find(a => a.id === accountId);
 
     await ctx.editMessageText(
@@ -247,7 +247,7 @@ export async function confirmDeleteAccountCallback(ctx: any) {
   await ctx.answerCbQuery('Удаляю...');
 
   try {
-    await apiClient.deleteAccount(tgUserId, accountId);
+    await apiClient.deleteAccount(ctx, accountId);
     
     await ctx.editMessageText(
       '✅ Счёт успешно удалён.',

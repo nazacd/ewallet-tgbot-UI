@@ -3,6 +3,7 @@ import { BotContext } from '../types';
 import { authService } from '../services/auth.service';
 import { apiClient } from '../services/api.client';
 import { stateManager } from '../state/state.manager';
+import { RETRY_HINT } from '../utils/messages';
 
 export async function startHandler(ctx: BotContext) {
   const tgUserId = ctx.from.id;
@@ -79,12 +80,12 @@ export async function onboardingCurrencyCallback(ctx: any) {
   const currency = ctx.match[1]; // Extract currency code from callback data
 
   try {
-    apiClient.updateMe(ctx, {
+    await apiClient.updateMe(ctx, {
       currency_code: currency
     })
   } catch (error) {
     stateManager.clearState(ctx.from.id);
-    return ctx.reply("Что то пошло не так, попробуйте позже.");
+    return ctx.reply(`Что-то пошло не так. ${RETRY_HINT}`);
   }
   
   await ctx.answerCbQuery();

@@ -1,11 +1,12 @@
 import { Telegraf } from 'telegraf';
 import { config } from './config/env';
+import { redisModule } from './config/redis';
 import { stateManager } from './state/state.manager';
 import { BotContext } from './types';
 
 // Import handlers
 import { startHandler, onboardingCurrencyCallback } from './handlers/start.handler';
-import { 
+import {
   transactionHandler,
   confirmTransactionCallback,
   editTransactionCallback,
@@ -31,6 +32,7 @@ import {
 } from './handlers/accounts.handler';
 import { helpHandler } from './handlers/help.handler';
 import { voiceHandler } from './handlers/voice.handler';
+import { statsHandler } from './handlers/stats.handler';
 
 // Validate configuration
 config.validate();
@@ -43,6 +45,7 @@ bot.command('start', startHandler);
 bot.command('balance', balanceHandler);
 bot.command('history', historyHandler);
 bot.command('accounts', accountsHandler);
+bot.command('stats', statsHandler);
 bot.command('help', helpHandler);
 
 // Callback query handlers
@@ -69,11 +72,11 @@ bot.action(/^acc_delete_confirm_(.+)$/, confirmDeleteAccountCallback);
 // Text message handler
 bot.on('text', async (ctx) => {
   const userId = ctx.from.id;
-  
+
   // Check if user is in a state (multi-step flow)
   const handled = await stateManager.handleState(userId, ctx);
   if (handled) return;
-  
+
   // Otherwise, treat as transaction input
   await transactionHandler(ctx);
 });
@@ -82,7 +85,7 @@ bot.on('text', async (ctx) => {
 // Voice message handler (for future implementation)
 bot.on('voice', async (ctx) => {
   const userId = ctx.from.id;
-  
+
   // Check if user is in a state (multi-step flow)
   const handled = await stateManager.handleState(userId, ctx);
   if (handled) return;
@@ -108,12 +111,16 @@ bot.launch()
   });
 
 // Graceful shutdown
-process.once('SIGINT', () => {
+process.once('SIGINT', async () => {
   console.log('Останавливаю бота...');
   bot.stop('SIGINT');
+  await redisModule.disconnect();
+  process.exit(0);
 });
 
-process.once('SIGTERM', () => {
+process.once('SIGTERM', async () => {
   console.log('Останавливаю бота...');
   bot.stop('SIGTERM');
+  await redisModule.disconnect();
+  process.exit(0);
 });

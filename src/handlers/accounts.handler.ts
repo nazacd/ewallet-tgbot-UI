@@ -53,20 +53,20 @@ export async function addAccountCallback(ctx: any) {
     'Как вы хотите его назвать?\n' +
     '(например, "Сбережения", "Кредитка", "Наличные")'
   );
-  
-  stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_NAME');
+
+  await stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_NAME');
 }
 
 // Handle account name input
 export async function accountNameHandler(ctx: any, data: any) {
   const accountName = ctx.message.text.trim();
-  
+
   if (!accountName || accountName.length > 50) {
     await ctx.reply('Введите корректное имя счёта (не более 50 символов).');
     return;
   }
 
-  stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_BALANCE', {
+  await stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_BALANCE', {
     onboardingData: { name: accountName }
   });
 
@@ -95,7 +95,7 @@ export async function accountBalanceHandler(ctx: any, data: any) {
 
   if (!name) {
     await ctx.reply('Что-то пошло не так. Попробуйте снова с /accounts');
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
     return;
   }
 
@@ -116,18 +116,18 @@ export async function accountBalanceHandler(ctx: any, data: any) {
       `Используйте /accounts, чтобы управлять счетами.`
     );
 
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
   } catch (error: any) {
     console.error('Account creation error:', error);
     await ctx.reply('❌ Не удалось создать счёт. Попробуйте снова.');
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
   }
 }
 
 // Manage accounts callback
 export async function manageAccountsCallback(ctx: any) {
   const tgUserId = ctx.from.id;
-  
+
   await ctx.answerCbQuery();
 
   try {
@@ -156,7 +156,7 @@ export async function manageAccountsCallback(ctx: any) {
 export async function viewAccountCallback(ctx: any) {
   const accountId = ctx.match[1];
   const tgUserId = ctx.from.id;
-  
+
   await ctx.answerCbQuery();
 
   try {
@@ -171,21 +171,21 @@ export async function viewAccountCallback(ctx: any) {
       return;
     }
 
-    const message = 
+    const message =
       `📊 ${account.name}\n\n` +
       `💰 Баланс: ${formatAmount(account.balance, currencyCode)}\n` +
       `${account.is_default ? '⭐️ Счёт по умолчанию' : ''}`;
 
     const buttons = [];
-    
+
     if (!account.is_default) {
       buttons.push([Markup.button.callback('⭐️ Сделать основным', `acc_default_${accountId}`)]);
     }
-    
+
     if (accounts.length > 1) {
       buttons.push([Markup.button.callback('🗑 Удалить счёт', `acc_delete_${accountId}`)]);
     }
-    
+
     buttons.push([Markup.button.callback('« Назад', 'acc_manage')]);
 
     await ctx.editMessageText(
@@ -202,12 +202,12 @@ export async function viewAccountCallback(ctx: any) {
 export async function setDefaultAccountCallback(ctx: any) {
   const accountId = ctx.match[1];
   const tgUserId = ctx.from.id;
-  
+
   await ctx.answerCbQuery('Устанавливаю по умолчанию...');
 
   try {
     await apiClient.updateAccount(ctx, accountId, { is_default: true });
-    
+
     const accounts = await apiClient.getAccounts(ctx);
     const account = accounts.find(a => a.id === accountId);
 
@@ -224,7 +224,7 @@ export async function setDefaultAccountCallback(ctx: any) {
 // Delete account
 export async function deleteAccountCallback(ctx: any) {
   const accountId = ctx.match[1];
-  
+
   await ctx.answerCbQuery();
 
   await ctx.editMessageText(
@@ -243,12 +243,12 @@ export async function deleteAccountCallback(ctx: any) {
 export async function confirmDeleteAccountCallback(ctx: any) {
   const accountId = ctx.match[1];
   const tgUserId = ctx.from.id;
-  
+
   await ctx.answerCbQuery('Удаляю...');
 
   try {
     await apiClient.deleteAccount(ctx, accountId);
-    
+
     await ctx.editMessageText(
       '✅ Счёт успешно удалён.',
       Markup.inlineKeyboard([[Markup.button.callback('« Назад к счетам', 'acc_back')]])

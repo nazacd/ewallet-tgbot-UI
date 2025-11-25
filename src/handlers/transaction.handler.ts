@@ -75,7 +75,7 @@ export async function transactionHandler(ctx: BotContext) {
       accountName: defaultAccount.name,
     });
 
-    stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", {
+    await stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", {
       parsedTransaction: parsed,
       accountId: defaultAccount.id,
     });
@@ -104,13 +104,13 @@ export async function transactionHandler(ctx: BotContext) {
 // Confirm transaction callback
 export async function confirmTransactionCallback(ctx: any) {
   const tgUserId = ctx.from.id;
-  const data = stateManager.getData(tgUserId);
+  const data = await stateManager.getData(tgUserId);
 
   await ctx.answerCbQuery();
 
   if (!data.parsedTransaction || !data.accountId) {
     await updateOrReply(ctx, "❌ Данные транзакции устарели. Попробуйте снова.");
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
     return;
   }
 
@@ -124,7 +124,7 @@ export async function confirmTransactionCallback(ctx: any) {
 
     if (!account) {
       await updateOrReply(ctx, "❌ Счёт не найден. Попробуйте снова.");
-      stateManager.clearState(tgUserId);
+      await stateManager.clearState(tgUserId);
       return;
     }
 
@@ -155,14 +155,14 @@ export async function confirmTransactionCallback(ctx: any) {
         )}`
     );
 
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
   } catch (error: any) {
     console.error("Transaction creation error:", error);
     await updateOrReply(
       ctx,
       `❌ Не удалось сохранить транзакцию. ${RETRY_HINT}`
     );
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
   }
 }
 
@@ -186,7 +186,7 @@ export async function editTransactionCallback(ctx: any) {
 export async function cancelTransactionCallback(ctx: any) {
   await ctx.answerCbQuery("Операция отменена");
   await updateOrReply(ctx, "❌ Транзакция отменена.");
-  stateManager.clearState(ctx.from.id);
+  await stateManager.clearState(ctx.from.id);
 }
 
 // Edit amount callback
@@ -194,21 +194,22 @@ export async function editAmountCallback(ctx: any) {
   await ctx.answerCbQuery();
   await updateOrReply(ctx, "💰 Введите новую сумму:");
 
-  stateManager.setState(ctx.from.id, "WAIT_TRANSACTION_EDIT_AMOUNT", {
-    ...stateManager.getData(ctx.from.id),
+  const currentData = await stateManager.getData(ctx.from.id);
+  await stateManager.setState(ctx.from.id, "WAIT_TRANSACTION_EDIT_AMOUNT", {
+    ...currentData,
   });
 }
 
 // Edit category callback
 export async function editCategoryCallback(ctx: any) {
   const tgUserId = ctx.from.id;
-  
+
   await ctx.answerCbQuery();
 
   try {
     // Get all categories
     const categories = await apiClient.getCategories(ctx);
-    
+
     if (categories.length === 0) {
       await updateOrReply(ctx, "❌ Категории не найдены. Попробуйте снова.");
       return;
@@ -238,13 +239,13 @@ export async function editCategoryCallback(ctx: any) {
 // Edit account callback
 export async function editAccountCallback(ctx: any) {
   const tgUserId = ctx.from.id;
-  
+
   await ctx.answerCbQuery();
 
   try {
     // Get all accounts
     const accounts = await apiClient.getAccounts(ctx);
-    
+
     if (accounts.length === 0) {
       await updateOrReply(ctx, "❌ Счета не найдены. Попробуйте снова.");
       return;
@@ -274,20 +275,20 @@ export async function editAccountCallback(ctx: any) {
 // Back to confirmation callback
 export async function backToConfirmCallback(ctx: any) {
   const tgUserId = ctx.from.id;
-  const data = stateManager.getData(tgUserId);
+  const data = await stateManager.getData(tgUserId);
 
   await ctx.answerCbQuery();
 
   if (!data.parsedTransaction || !data.accountId) {
     await updateOrReply(ctx, "❌ Данные транзакции устарели. Попробуйте снова.");
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
     return;
   }
 
   try {
     const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
 
-    stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
+    await stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
     await updateOrReply(ctx, summary, keyboard);
   } catch (error) {
@@ -299,14 +300,14 @@ export async function backToConfirmCallback(ctx: any) {
 // Select category callback
 export async function selectCategoryCallback(ctx: any) {
   const tgUserId = ctx.from.id;
-  const data = stateManager.getData(tgUserId);
+  const data = await stateManager.getData(tgUserId);
   const categoryId = parseInt(ctx.match[1]);
 
   await ctx.answerCbQuery();
 
   if (!data.parsedTransaction) {
     await updateOrReply(ctx, "❌ Данные транзакции устарели. Попробуйте снова.");
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
     return;
   }
 
@@ -323,7 +324,7 @@ export async function selectCategoryCallback(ctx: any) {
 
     const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
 
-    stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
+    await stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
     await updateOrReply(
       ctx,
@@ -339,14 +340,14 @@ export async function selectCategoryCallback(ctx: any) {
 // Select account callback
 export async function selectAccountCallback(ctx: any) {
   const tgUserId = ctx.from.id;
-  const data = stateManager.getData(tgUserId);
+  const data = await stateManager.getData(tgUserId);
   const accountId = ctx.match[1];
 
   await ctx.answerCbQuery();
 
   if (!data.parsedTransaction) {
     await updateOrReply(ctx, "❌ Данные транзакции устарели. Попробуйте снова.");
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
     return;
   }
 
@@ -359,13 +360,13 @@ export async function selectAccountCallback(ctx: any) {
       return;
     }
 
-   
+
     // Update account ID
     data.accountId = accountId;
-    
+
     const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
 
-    stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
+    await stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", data);
 
     await updateOrReply(
       ctx,
@@ -392,7 +393,7 @@ export async function editAmountHandler(ctx: any, data: any) {
     const parsed = data.parsedTransaction;
     if (parsed) {
       parsed.amount = amount;
-      stateManager.setState(ctx.from.id, "WAIT_TRANSACTION_CONFIRM", {
+      await stateManager.setState(ctx.from.id, "WAIT_TRANSACTION_CONFIRM", {
         ...data,
         parsedTransaction: parsed,
       });
@@ -408,7 +409,7 @@ export async function editAmountHandler(ctx: any, data: any) {
         keyboard
       );
     }
-    
+
   } catch (error) {
     console.error("Error selecting account:", error);
     await updateOrReply(ctx, "❌ Произошла ошибка. Попробуйте снова.");

@@ -218,7 +218,7 @@ export async function editCategoryCallback(ctx: any) {
     // Create inline keyboard with categories
     const buttons = categories.map((cat) => [
       Markup.button.callback(
-        `${getCategoryEmoji(cat.name)} ${cat.name}`,
+        `${getCategoryEmoji(cat.slug)} ${cat.name}`,
         `tx_select_category_${cat.id}`
       ),
     ]);
@@ -328,7 +328,7 @@ export async function selectCategoryCallback(ctx: any) {
 
     await updateOrReply(
       ctx,
-      `✅ Категория обновлена: ${getCategoryEmoji(category.name)} ${category.name}\n\n${summary}`,
+      `✅ Категория обновлена: ${getCategoryEmoji(category.slug)} ${category.name}\n\n${summary}`,
       keyboard
     );
   } catch (error) {

@@ -38,7 +38,7 @@ export async function historyHandler(ctx: BotContext) {
       txs.forEach((tx) => {
         const emoji = getTransactionEmoji(tx.type);
         const category = categories.find((c) => c.id === tx.category_id);
-        const categoryEmoji = category ? getCategoryEmoji(category.name) : "";
+        const categoryEmoji = category ? getCategoryEmoji(category.slug) : "";
         const account = accounts.find((a) => a.id === tx.account_id);
 
         const categoryText = category ? `(${category.name})` : "";

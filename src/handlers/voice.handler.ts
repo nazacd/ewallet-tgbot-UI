@@ -44,7 +44,7 @@ export async function voiceHandler(ctx: any) {
       accountName: defaultAccount.name,
     });
 
-    stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", {
+    await stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", {
       parsedTransaction: parsed,
       accountId: defaultAccount.id,
     });

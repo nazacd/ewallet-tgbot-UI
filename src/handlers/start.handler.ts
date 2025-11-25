@@ -7,7 +7,7 @@ import { RETRY_HINT } from '../utils/messages';
 
 export async function startHandler(ctx: BotContext) {
   const tgUserId = ctx.from.id;
-  
+
   try {
     // Authenticate user
     await authService.ensureToken(tgUserId, {
@@ -29,7 +29,7 @@ export async function startHandler(ctx: BotContext) {
       //   '(например, "Наличные", "Основная карта", "Сбережения")',
       //   Markup.removeKeyboard()
       // );
-      
+
       await ctx.reply(
         '👋 Добро пожаловать в E-Wallet!\n\n'+
         `Какая валюта будет у ваших счетов?\n\n` +
@@ -46,11 +46,11 @@ export async function startHandler(ctx: BotContext) {
         ])
       );
 
-      stateManager.setState(tgUserId, 'ONBOARDING_CURRENCY');
+      await stateManager.setState(tgUserId, 'ONBOARDING_CURRENCY');
     } else {
       // User already set up
       const user = await apiClient.getMe(ctx);
-      
+
       await ctx.reply(
         `С возвращением, ${ctx.from.first_name}! 👋\n\n` +
         'Отправьте мне транзакцию, например:\n' +
@@ -60,12 +60,13 @@ export async function startHandler(ctx: BotContext) {
         'Или используйте команды:\n' +
         '/balance - Проверить балансы\n' +
         '/history - Последние транзакции\n' +
+        '/stats - Статистика расходов\n' +
         '/accounts - Управление счетами\n' +
         '/help - Справка по командам',
         Markup.removeKeyboard()
       );
-      
-      stateManager.clearState(tgUserId);
+
+      await stateManager.clearState(tgUserId);
     }
   } catch (error: any) {
     console.error('Start handler error:', error);
@@ -84,14 +85,14 @@ export async function onboardingCurrencyCallback(ctx: any) {
       currency_code: currency
     })
   } catch (error) {
-    stateManager.clearState(ctx.from.id);
+    await stateManager.clearState(ctx.from.id);
     return ctx.reply(`Что-то пошло не так. ${RETRY_HINT}`);
   }
-  
+
   await ctx.answerCbQuery();
   await ctx.deleteMessage();
 
-  stateManager.setState(ctx.from.id, 'ONBOARDING_ACCOUNT_NAME', {
+  await stateManager.setState(ctx.from.id, 'ONBOARDING_ACCOUNT_NAME', {
     onboardingData: { currency }
   });
 
@@ -100,7 +101,7 @@ export async function onboardingCurrencyCallback(ctx: any) {
   //   '💰 Какой текущий баланс на этом счёте?\n' +
   //   '(Введите число или отправьте 0, если начинаете с нуля)'
   // );
-  
+
   await ctx.reply(
     `Готово! Валюта установлена: ${currency}.\n\n` +
     'Давайте настроим ваш первый счёт. Это может быть кошелёк наличных, банковская карта или накопительный счёт.\n\n' +
@@ -113,7 +114,7 @@ export async function onboardingCurrencyCallback(ctx: any) {
 // Onboarding: Account name step
 export async function onboardingAccountNameHandler(ctx: any, data: any) {
   const accountName = ctx.message.text.trim();
-  
+
   if (!accountName || accountName.length > 50) {
     await ctx.reply('Введите корректное имя счёта (не более 50 символов).');
     return;
@@ -122,7 +123,7 @@ export async function onboardingAccountNameHandler(ctx: any, data: any) {
 
 
   // Store the name and move to currency selection
-  stateManager.setState(ctx.from.id, 'ONBOARDING_BALANCE', {
+  await stateManager.setState(ctx.from.id, 'ONBOARDING_BALANCE', {
     onboardingData: { name: accountName, currency: data.onboardingData.currency}
   });
 
@@ -147,7 +148,7 @@ export async function onboardingBalanceHandler(ctx: any, data: any) {
 
   if (!name) {
     await ctx.reply('Что-то пошло не так. Давайте начнём заново с /start');
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
     return;
   }
 
@@ -170,13 +171,13 @@ export async function onboardingBalanceHandler(ctx: any, data: any) {
       `Или отправьте голосовое сообщение! 🎤`
     );
 
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
   } catch (error: any) {
     console.error('Account creation error:', error);
     await ctx.reply(
       '❌ Не удалось создать счёт. Попробуйте снова с /start'
     );
-    stateManager.clearState(tgUserId);
+    await stateManager.clearState(tgUserId);
   }
 }
 

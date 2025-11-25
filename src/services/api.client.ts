@@ -26,7 +26,14 @@ class APIClient {
     isRetry: boolean = false
   ): Promise<T> {
     const tgUserId = ctx.from.id;
-    const token = await authService.getToken(tgUserId);
+
+    // Ensure we have a token (get from Redis or authenticate with backend)
+    const token = await authService.ensureToken(tgUserId, {
+      first_name: ctx.from.first_name,
+      last_name: ctx.from.last_name,
+      username: ctx.from.username,
+      language_code: ctx.from.language_code,
+    });
 
     if (!token) {
         throw new Error("User not authenticated");
@@ -48,7 +55,7 @@ class APIClient {
         try {
           // Clear expired token
           await authService.clearToken(tgUserId);
-          
+
           // Regenerate token with user data from context
           const userData = {
             first_name: ctx.from.first_name,
@@ -56,9 +63,9 @@ class APIClient {
             username: ctx.from.username,
             language_code: ctx.from.language_code,
           };
-          
+
           await authService.authenticate(tgUserId, userData);
-          
+
           // Retry the request with new token (pass isRetry to prevent infinite loop)
           return this.request<T>(ctx, requestConfig, true);
         } catch (refreshError) {
@@ -66,7 +73,7 @@ class APIClient {
           throw new Error("Сессия истекла. Попробуйте снова.");
         }
       }
-      
+
       throw error;
     }
   }
@@ -160,7 +167,7 @@ class APIClient {
     data: {
       account_id: string;
       category_id?: number;
-      type: "income" | "expense";
+      type: "withdrawal" | "deposit";
       amount: number;
       currency_code: string;
       note?: string;
@@ -179,7 +186,7 @@ class APIClient {
     params?: {
       account_id?: string;
       category_id?: number;
-      type?: "income" | "expense";
+      type?: "withdrawal" | "deposit";
       from?: string;
       to?: string;
       limit?: number;

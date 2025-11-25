@@ -1,33 +1,42 @@
 import { BotState, StateData } from '../types';
+import { redisClient } from '../config/redis';
 
 type StateHandler = (ctx: any, data: StateData) => Promise<void>;
 
 class StateManager {
-  private userStates = new Map<number, BotState>();
-  private userData = new Map<number, StateData>();
   private handlers = new Map<BotState, StateHandler>();
+  private readonly STATE_PREFIX = 'state:current:';
+  private readonly DATA_PREFIX = 'state:data:';
+  private readonly STATE_TTL = 60 * 60 * 24; // 24 hours
 
-  setState(userId: number, state: BotState, data: StateData = {}): void {
-    this.userStates.set(userId, state);
-    this.userData.set(userId, data);
+  async setState(userId: number, state: BotState, data: StateData = {}): Promise<void> {
+    await Promise.all([
+      redisClient.setEx(this.STATE_PREFIX + userId, this.STATE_TTL, state),
+      redisClient.setEx(this.DATA_PREFIX + userId, this.STATE_TTL, JSON.stringify(data))
+    ]);
   }
 
-  getState(userId: number): BotState | undefined {
-    return this.userStates.get(userId);
+  async getState(userId: number): Promise<BotState | undefined> {
+    const state = await redisClient.get(this.STATE_PREFIX + userId);
+    return state as BotState | undefined;
   }
 
-  getData(userId: number): StateData {
-    return this.userData.get(userId) || {};
+  async getData(userId: number): Promise<StateData> {
+    const data = await redisClient.get(this.DATA_PREFIX + userId);
+    return data ? JSON.parse(data) : {};
   }
 
-  updateData(userId: number, data: Partial<StateData>): void {
-    const currentData = this.getData(userId);
-    this.userData.set(userId, { ...currentData, ...data });
+  async updateData(userId: number, data: Partial<StateData>): Promise<void> {
+    const currentData = await this.getData(userId);
+    const newData = { ...currentData, ...data };
+    await redisClient.setEx(this.DATA_PREFIX + userId, this.STATE_TTL, JSON.stringify(newData));
   }
 
-  clearState(userId: number): void {
-    this.userStates.delete(userId);
-    this.userData.delete(userId);
+  async clearState(userId: number): Promise<void> {
+    await Promise.all([
+      redisClient.del(this.STATE_PREFIX + userId),
+      redisClient.del(this.DATA_PREFIX + userId)
+    ]);
   }
 
   register(state: BotState, handler: StateHandler): void {
@@ -35,13 +44,13 @@ class StateManager {
   }
 
   async handleState(userId: number, ctx: any): Promise<boolean> {
-    const state = this.getState(userId);
+    const state = await this.getState(userId);
     if (!state) return false;
 
     const handler = this.handlers.get(state);
     if (!handler) return false;
 
-    const data = this.getData(userId);
+    const data = await this.getData(userId);
     await handler(ctx, data);
     return true;
   }

@@ -49,7 +49,7 @@ export interface Transaction {
 }
 
 export interface ParsedTransaction {
-  type: "income" | "expense";
+  type: "withdrawal" | "deposit";
   amount: number;
   category_id?: number;
   note?: string;
@@ -68,7 +68,8 @@ export interface TransactionStats {
   balance: number;
   by_category: {
     category_id: number;
-    name: string;
+    category_slug: string;
+    category_name: string;
     total: number;
   }[];
 }

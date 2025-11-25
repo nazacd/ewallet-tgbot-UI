@@ -35,7 +35,7 @@ export interface Transaction {
   user_id: string;
   account_id: string;
   category_id?: number;
-  type: "income" | "expense";
+  type: "withdrawal" | "deposit";
   status?: string;
   amount: number;
   currency_code: string;

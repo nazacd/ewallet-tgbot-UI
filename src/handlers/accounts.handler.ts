@@ -3,58 +3,81 @@ import { BotContext } from '../types';
 import { apiClient } from '../services/api.client';
 import { stateManager } from '../state/state.manager';
 import { formatAmount } from '../utils/format';
+import { createStepMessage } from '../utils/navigation';
 
-export async function accountsHandler(ctx: BotContext) {
+export async function accountsHandler(ctx: BotContext | any) {
   const tgUserId = ctx.from.id;
 
   try {
     const accounts = await apiClient.getAccounts(ctx);
-    const user = await apiClient.getMe(ctx);
-    const currencyCode = user.currency_code || 'USD';
 
     if (accounts.length === 0) {
-      await ctx.reply(
-        'У вас ещё нет счетов. Используйте /start, чтобы создать первый.'
-      );
+      const message =
+        '📊 У вас пока нет счетов.\n\n' +
+        'Создайте первый счёт, чтобы начать учёт финансов.';
+
+      const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('➕ Создать счёт', 'acc_add')],
+        [Markup.button.callback('« Назад в меню', 'back_to_menu')],
+      ]);
+
+      if (ctx.callbackQuery) {
+        await ctx.editMessageText(message, keyboard);
+      } else {
+        await ctx.reply(message, keyboard);
+      }
       return;
     }
 
-    let message = '📊 Ваши счета:\n\n';
-    let total = 0;
+    const user = await apiClient.getMe(ctx);
+    const currencyCode = user.currency_code || 'USD';
 
-    accounts.forEach(account => {
-      const star = account.is_default ? '⭐️ ' : '';
-      message += `${star}${account.name} - ${formatAmount(account.balance, currencyCode)}\n`;
-      total += account.balance;
+    let message = '📊 <b>Ваши счета:</b>\n\n';
+
+    accounts.forEach((account) => {
+      const defaultIcon = account.is_default ? '✅ ' : '';
+      message += `${defaultIcon}<b>${account.name}</b>\n`;
+      message += `💰 ${formatAmount(account.balance, currencyCode)}\n\n`;
     });
 
-    if (accounts.length > 1) {
-      message += `\n💰 Итого: ${formatAmount(total, currencyCode)}`;
-    }
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback('➕ Добавить счёт', 'acc_add')],
+      [Markup.button.callback('📝 Управление счетами', 'acc_manage')],
+      [Markup.button.callback('« Назад в меню', 'back_to_menu')],
+    ]);
 
-    await ctx.reply(
-      message,
-      Markup.inlineKeyboard([
-        [Markup.button.callback('➕ Добавить счёт', 'acc_add')],
-        [Markup.button.callback('⚙️ Управлять', 'acc_manage')],
-      ])
-    );
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(message, {
+        parse_mode: 'HTML',
+        ...keyboard,
+      });
+    } else {
+      await ctx.reply(message, {
+        parse_mode: 'HTML',
+        ...keyboard,
+      });
+    }
   } catch (error: any) {
     console.error('Accounts handler error:', error);
-    await ctx.reply('❌ Не удалось получить счета. Попробуйте снова.');
+    await ctx.reply('❌ Не удалось загрузить счета. Попробуйте снова.');
   }
 }
 
 // Add account callback
 export async function addAccountCallback(ctx: any) {
   await ctx.answerCbQuery();
-  await ctx.editMessageText(
-    '➕ Создать новый счёт\n\n' +
+
+  const message = createStepMessage(
+    1, 2, 'Название счета',
     'Как вы хотите его назвать?\n' +
     '(например, "Сбережения", "Кредитка", "Наличные")'
   );
 
-  await stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_NAME');
+  await ctx.editMessageText(message);
+
+  await stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_NAME', {
+    stepInfo: { current: 1, total: 2, name: 'Название счета' }
+  });
 }
 
 // Handle account name input
@@ -67,17 +90,21 @@ export async function accountNameHandler(ctx: any, data: any) {
   }
 
   await stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_BALANCE', {
-    onboardingData: { name: accountName }
+    onboardingData: { name: accountName },
+    stepInfo: { current: 2, total: 2, name: 'Начальный баланс' }
   });
 
   // Get user's currency
   const user = await apiClient.getMe(ctx);
   const currencyCode = user.currency_code || 'USD';
 
-  await ctx.reply(
+  const message = createStepMessage(
+    2, 2, 'Начальный баланс',
     `Отлично! Какой текущий баланс у ${accountName}?\n` +
     `(Введите число в ${currencyCode}, либо 0, если начинаете с нуля)`
   );
+
+  await ctx.reply(message);
 }
 
 // Handle account balance input
@@ -113,10 +140,15 @@ export async function accountBalanceHandler(ctx: any, data: any) {
       `✅ Счёт создан!\n\n` +
       `📊 ${account.name}\n` +
       `💰 Баланс: ${formatAmount(balance, currencyCode)}\n\n` +
-      `Используйте /accounts, чтобы управлять счетами.`
+      `Используйте /accounts, чтобы управлять счетами.\n\n` +
+      `💡 Теперь можете добавить транзакцию, например: "Кофе 5000"`
     );
 
     await stateManager.clearState(tgUserId);
+
+    // Return to main menu
+    const { showMainMenu } = await import('./menu.handler');
+    await showMainMenu(ctx);
   } catch (error: any) {
     console.error('Account creation error:', error);
     await ctx.reply('❌ Не удалось создать счёт. Попробуйте снова.');

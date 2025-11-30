@@ -75,3 +75,35 @@ export function getCategoryEmoji(categorySlug: string): string {
 export function escapeMarkdown(text: string): string {
   return text.replace(/[_*[\]()~`>#+=|{}.!-]/g, '\\$&');
 }
+
+export function escapeHtml(text: string | undefined | null): string {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+export function truncateLabel(text: string, maxLength: number): string {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength - 1) + '…';
+}
+
+export function formatCompactAmount(amount: number): string {
+  const abs = Math.abs(amount);
+
+  if (abs >= 1_000_000) {
+    const v = abs / 1_000_000;
+    const str = v >= 10 ? Math.round(v).toString() : v.toFixed(1).replace(/\.0$/, '');
+    return `${str}M`;
+  }
+
+  if (abs >= 1_000) {
+    const v = abs / 1_000;
+    const str = v >= 10 ? Math.round(v).toString() : v.toFixed(1).replace(/\.0$/, '');
+    return `${str}K`;
+  }
+
+  return abs.toString();
+}

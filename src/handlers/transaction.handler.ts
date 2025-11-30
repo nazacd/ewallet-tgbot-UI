@@ -1,11 +1,13 @@
 import { Markup } from "telegraf";
-import { BotContext } from "../types";
+import { BotContext, Transaction } from "../types";
 import { apiClient } from "../services/api.client";
 import { stateManager } from "../state/state.manager";
 import {
   formatAmount,
   getTransactionEmoji,
   getCategoryEmoji,
+  escapeHtml,
+  formatDate,
 } from "../utils/format";
 import {
   RETRY_HINT,
@@ -75,9 +77,15 @@ export async function transactionHandler(ctx: BotContext) {
       accountName: defaultAccount.name,
     });
 
+    // Check if user is in tutorial mode
+    const currentState = await stateManager.getState(tgUserId);
+    const currentData = await stateManager.getData(tgUserId);
+    const isTutorial = currentState === 'TUTORIAL_FIRST_TRANSACTION' || currentData.isTutorial;
+
     await stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", {
       parsedTransaction: parsed,
       accountId: defaultAccount.id,
+      isTutorial: isTutorial, // Preserve tutorial flag
     });
 
     await ctx.reply(message, buildConfirmationKeyboard({ allowFurtherEdits: true }));
@@ -102,7 +110,7 @@ export async function transactionHandler(ctx: BotContext) {
 }
 
 // Confirm transaction callback
-export async function confirmTransactionCallback(ctx: any) {
+export async function confirmTransactionCallback(ctx: BotContext) {
   const tgUserId = ctx.from.id;
   const data = await stateManager.getData(tgUserId);
 
@@ -115,12 +123,13 @@ export async function confirmTransactionCallback(ctx: any) {
   }
 
   try {
-    // Get account to get currency
+    const isTutorial = data.isTutorial === true;
+
     const accounts = await apiClient.getAccounts(ctx);
     const account = accounts.find((a) => a.id === data.accountId);
 
     const user = await apiClient.getMe(ctx);
-    const currencyCode = user.currency_code || 'USD';
+    const currencyCode = user.currency_code || "USD";
 
     if (!account) {
       await updateOrReply(ctx, "❌ Счёт не найден. Попробуйте снова.");
@@ -130,7 +139,7 @@ export async function confirmTransactionCallback(ctx: any) {
 
     const parsed = data.parsedTransaction;
 
-    // Create the transaction
+    // создаём транзакцию
     const transaction = await apiClient.createTransaction(ctx, {
       account_id: data.accountId,
       category_id: parsed.category_id,
@@ -141,21 +150,35 @@ export async function confirmTransactionCallback(ctx: any) {
       performed_at: parsed.performed_at,
     });
 
-    // Get updated account balance
+    // (если хочешь баланс – оставь как было)
     const updatedAccounts = await apiClient.getAccounts(ctx);
     const updatedAccount = updatedAccounts.find((a) => a.id === data.accountId);
 
-    const emoji = getTransactionEmoji(parsed.type);
-    await updateOrReply(
-      ctx,
-      `${emoji} Транзакция сохранена!\n\n` +
-        `📊 Баланс ${account.name}: ${formatAmount(
-          updatedAccount?.balance || 0,
-          currencyCode
-        )}`
-    );
+    // подтягиваем категорию, чтобы вставить её в финальный текст
+    const categories = await apiClient.getCategories(ctx);
+    const category = categories.find((c) => c.id === parsed.category_id);
+
+    const finalText = buildSavedTransactionMessage({
+      transaction,
+      currencyCode,
+      accountName: account.name,
+      categoryName: category?.name || "",
+      categorySlug: category?.slug || "",
+    });
+
+    await updateOrReply(ctx,finalText, {
+      parse_mode: 'HTML',
+    });
 
     await stateManager.clearState(tgUserId);
+
+    if (isTutorial) {
+      const { tutorialTransactionHandler } = await import("./tutorial.handler");
+      await tutorialTransactionHandler(ctx, data);
+    } else {
+      const { showMainMenu } = await import("./menu.handler");
+      await showMainMenu(ctx, true, false);
+    }
   } catch (error: any) {
     console.error("Transaction creation error:", error);
     await updateOrReply(
@@ -165,6 +188,42 @@ export async function confirmTransactionCallback(ctx: any) {
     await stateManager.clearState(tgUserId);
   }
 }
+
+function buildSavedTransactionMessage(options: {
+  transaction: Transaction;
+  currencyCode: string;
+  accountName: string;
+  categoryName: string;
+  categorySlug: string;
+}) {
+  const { transaction, currencyCode, accountName, categoryName, categorySlug } = options;
+  const emoji = getTransactionEmoji(transaction.type);
+  const typeText = transaction.type === 'deposit' ? 'Доход' : 'Расход';
+  const categoryText = categoryName
+    ? `${getCategoryEmoji(categorySlug)} ${escapeHtml(categoryName)}`
+    : '📌 Прочее';
+
+  const dateStr = formatDate(transaction.created_at)
+
+  const formattedAmount = formatAmount(transaction.amount, transaction.currency_code || 'USD');
+
+  let message = '';
+  message += `<b>✅ Транзакция сохранена!</b>\n\n`;
+  message += `${emoji} <b>Тип:</b> ${typeText}\n`;
+  message += `💰 <b>Сумма:</b> ${formattedAmount} ${currencyCode}\n`;
+  message += `📁 <b>Категория:</b> ${categoryText}\n`;
+  message += `📊 <b>Счёт:</b> ${accountName}\n`;
+  message += `📅 <b>Дата:</b> ${dateStr}\n`;
+
+  if (transaction.note) {
+    message += `\n📝 <b>Комментарий:</b>\n`;
+    message += `<code>${escapeHtml(transaction.note)}</code>\n`;
+  };
+
+  return message;
+}
+
+
 
 // Edit transaction callback
 export async function editTransactionCallback(ctx: any) {
@@ -183,11 +242,18 @@ export async function editTransactionCallback(ctx: any) {
 }
 
 // Cancel transaction callback
-export async function cancelTransactionCallback(ctx: any) {
-  await ctx.answerCbQuery("Операция отменена");
-  await updateOrReply(ctx, "❌ Транзакция отменена.");
-  await stateManager.clearState(ctx.from.id);
+export async function cancelTransactionCallback(ctx: BotContext) {
+  const tgUserId = ctx.from.id;
+
+  await ctx.answerCbQuery('Отменено');
+  await updateOrReply(ctx, '❌ Транзакция отменена.\n\n' + ctx.text);
+  await stateManager.clearState(tgUserId);
+
+  // Return to main menu - send as new message
+  const { showMainMenu } = await import('./menu.handler');
+  await showMainMenu(ctx, true, false); // forceNew = true, deleteLast = false
 }
+
 
 // Edit amount callback
 export async function editAmountCallback(ctx: any) {

@@ -206,6 +206,16 @@ class APIClient {
     });
   }
 
+  async getTransaction(
+    ctx: any,
+    trnID: string,
+  ): Promise<Transaction> {
+    return this.request<Transaction>(ctx, {
+      method: "GET",
+      url: `/transactions/${trnID}`,
+    });
+  }
+
   async updateTransaction(
     ctx: any,
     transactionId: string,

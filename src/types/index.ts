@@ -83,7 +83,11 @@ export type BotState =
   | "WAIT_TRANSACTION_EDIT_AMOUNT"
   | "WAIT_TRANSACTION_EDIT_CATEGORY"
   | "WAIT_ACCOUNT_NAME"
-  | "WAIT_ACCOUNT_BALANCE";
+  | "WAIT_ACCOUNT_BALANCE"
+  | "TUTORIAL_WELCOME"
+  | "TUTORIAL_FIRST_TRANSACTION"
+  | "TUTORIAL_COMPLETE"
+  | "VIEW_HISTORY";
 
 export interface StateData {
   parsedTransaction?: ParsedTransaction;
@@ -94,6 +98,16 @@ export interface StateData {
     currency?: string;
     balance?: number;
   };
+  tutorialStep?: number;
+  isTutorial?: boolean; // Flag to track if user is in tutorial mode
+  createdAt?: number; // timestamp for expiration tracking
+  stepInfo?: {
+    current: number;
+    total: number;
+    name: string;
+  };
+  transactions?: Transaction[]; // For history pagination
+  currentPage?: number; // Current page in history
 }
 
 export interface BotContext extends Context {

@@ -5,7 +5,12 @@ import { stateManager } from './state/state.manager';
 import { BotContext } from './types';
 
 // Import handlers
-import { startHandler, onboardingCurrencyCallback } from './handlers/start.handler';
+import {
+  startHandler,
+  onboardingCurrencyCallback,
+  accountNameHandler,
+  onboardingBalanceHandler
+} from './handlers/start.handler';
 import {
   transactionHandler,
   confirmTransactionCallback,
@@ -19,7 +24,12 @@ import {
   selectAccountCallback,
 } from './handlers/transaction.handler';
 import { balanceHandler } from './handlers/balance.handler';
-import { historyHandler } from './handlers/history.handler';
+import {
+  historyHandler,
+  historyPageCallback,
+  historyViewCallback,
+  historyBackCallback
+} from './handlers/history.handler';
 import {
   accountsHandler,
   addAccountCallback,
@@ -32,7 +42,34 @@ import {
 } from './handlers/accounts.handler';
 import { helpHandler } from './handlers/help.handler';
 import { voiceHandler } from './handlers/voice.handler';
-import { statsHandler } from './handlers/stats.handler';
+import {
+  statsHandler,
+  statsToMenuCallback
+} from './handlers/stats.handler';
+import {
+  tutorialBeginCallback,
+  tutorialSkipCallback,
+  tutorialCommandsCallback,
+  tutorialFinishCallback,
+  tutorialCompleteHandler,
+} from './handlers/tutorial.handler';
+import { getCancelMessage, getTimeoutMessage } from './utils/navigation';
+import {
+  showMainMenu,
+  menuAccountsCallback,
+  menuAddTransactionCallback,
+  menuHistoryCallback,
+  menuStatsCallback,
+  menuSettingsCallback,
+  backToMenuCallback,
+} from './handlers/menu.handler';
+import {
+  showSettings,
+  settingsChangeCurrencyCallback,
+  settingsSetCurrencyCallback,
+  settingsDefaultAccountCallback,
+  settingsSetDefaultAccountCallback,
+} from './handlers/settings.handler';
 
 // Validate configuration
 config.validate();
@@ -47,9 +84,60 @@ bot.command('history', historyHandler);
 bot.command('accounts', accountsHandler);
 bot.command('stats', statsHandler);
 bot.command('help', helpHandler);
+bot.command('menu', async (ctx) => {
+  await showMainMenu(ctx, false);
+});
+
+// Cancel command - exits any active flow
+bot.command('cancel', async (ctx) => {
+  const userId = ctx.from.id;
+  const currentState = await stateManager.getStateWithCheck(userId);
+
+  if (!currentState) {
+    // No active state or state expired
+    await ctx.reply(getTimeoutMessage());
+  } else {
+    // Active state - cancel it
+    await stateManager.clearState(userId);
+    await ctx.reply(getCancelMessage());
+  }
+});
 
 // Callback query handlers
 bot.action(/^currency_(.+)$/, onboardingCurrencyCallback);
+
+// Menu callbacks
+bot.action('menu_accounts', menuAccountsCallback);
+bot.action('menu_add_transaction', menuAddTransactionCallback);
+bot.action('menu_history', menuHistoryCallback);
+bot.action('menu_stats', menuStatsCallback);
+bot.action('menu_settings', menuSettingsCallback);
+bot.action('back_to_menu', backToMenuCallback);
+
+// Settings callbacks
+bot.action('settings_change_currency', settingsChangeCurrencyCallback);
+bot.action(/^settings_set_currency_(.+)$/, settingsSetCurrencyCallback);
+bot.action('settings_default_account', settingsDefaultAccountCallback);
+bot.action(/^settings_set_default_(.+)$/, settingsSetDefaultAccountCallback);
+
+// Stats callbacks
+bot.action('stats_to_menu', statsToMenuCallback);
+
+// Tutorial callbacks
+bot.action('start_tutorial', tutorialBeginCallback);
+bot.action('skip_tutorial', tutorialSkipCallback);
+bot.action('tutorial_begin', tutorialBeginCallback);
+bot.action('tutorial_skip', tutorialSkipCallback);
+bot.action('tutorial_commands', tutorialCommandsCallback);
+bot.action('tutorial_finish', tutorialFinishCallback);
+
+// Universal cancel action
+bot.action('action_cancel', async (ctx) => {
+  await ctx.answerCbQuery('Операция отменена');
+  await stateManager.clearState(ctx.from.id);
+  await ctx.deleteMessage().catch(() => {});
+  await ctx.reply(getCancelMessage());
+});
 
 bot.action('tx_confirm', confirmTransactionCallback);
 bot.action('tx_edit', editTransactionCallback);
@@ -69,16 +157,22 @@ bot.action(/^acc_default_(.+)$/, setDefaultAccountCallback);
 bot.action(/^acc_delete_(?!confirm_)(.+)$/, deleteAccountCallback);
 bot.action(/^acc_delete_confirm_(.+)$/, confirmDeleteAccountCallback);
 
+// History callbacks
+bot.action(/^history_page_(\d+)$/, historyPageCallback);
+bot.action(/^history_view_(\d+)$/, historyViewCallback);
+bot.action(/^history_back_(\d+)$/, historyBackCallback);
+
 // Text message handler
 bot.on('text', async (ctx) => {
   const userId = ctx.from.id;
 
-  // Check if user is in a state (multi-step flow)
+  // Check if user has an active state
   const handled = await stateManager.handleState(userId, ctx);
-  if (handled) return;
 
-  // Otherwise, treat as transaction input
-  await transactionHandler(ctx);
+  if (!handled) {
+    // No active state, try to parse as transaction
+    await transactionHandler(ctx);
+  }
 });
 
 

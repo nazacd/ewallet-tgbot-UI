@@ -6,15 +6,17 @@ export function buildTransactionSummary({
   parsed,
   currencyCode,
   categoryName,
+  categorySlug,
   accountName,
 }: {
   parsed: ParsedTransaction;
   currencyCode: string;
   categoryName?: string;
+  categorySlug?: string;
   accountName?: string;
 }): string {
   const emoji = getTransactionEmoji(parsed.type);
-  const categoryEmoji = categoryName ? getCategoryEmoji(categoryName) : "📌";
+  const categoryEmoji = categorySlug ? getCategoryEmoji(categorySlug) : "📌";
   const typeText = parsed.type === "deposit" ? "Доход" : "Расход";
 
   let message = `${emoji} Новая операция: ${typeText}\n\n`;

@@ -44,9 +44,15 @@ export async function voiceHandler(ctx: any) {
       accountName: defaultAccount.name,
     });
 
+    // Check if user is in tutorial mode
+    const currentState = await stateManager.getState(tgUserId);
+    const currentData = await stateManager.getData(tgUserId);
+    const isTutorial = currentState === 'TUTORIAL_FIRST_TRANSACTION' || currentData.isTutorial;
+
     await stateManager.setState(tgUserId, "WAIT_TRANSACTION_CONFIRM", {
       parsedTransaction: parsed,
       accountId: defaultAccount.id,
+      isTutorial: isTutorial, // Preserve tutorial flag
     });
 
     await ctx.reply(message, buildConfirmationKeyboard({ allowFurtherEdits: true }));

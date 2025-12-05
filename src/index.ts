@@ -1,15 +1,16 @@
 import { Telegraf } from 'telegraf';
+import { Server } from 'http';
 import { config } from './config/env';
 import { redisModule } from './config/redis';
 import { stateManager } from './state/state.manager';
 import { BotContext } from './types';
 
-// Import handlers
+// Handlers
 import {
   startHandler,
   onboardingCurrencyCallback,
   accountNameHandler,
-  onboardingBalanceHandler
+  onboardingBalanceHandler,
 } from './handlers/start.handler';
 import {
   transactionHandler,
@@ -28,7 +29,7 @@ import {
   historyHandler,
   historyPageCallback,
   historyViewCallback,
-  historyBackCallback
+  historyBackCallback,
 } from './handlers/history.handler';
 import {
   accountsHandler,
@@ -44,7 +45,7 @@ import { helpHandler } from './handlers/help.handler';
 import { voiceHandler } from './handlers/voice.handler';
 import {
   statsHandler,
-  statsToMenuCallback
+  statsToMenuCallback,
 } from './handlers/stats.handler';
 import {
   tutorialBeginCallback,
@@ -71,13 +72,18 @@ import {
   settingsSetDefaultAccountCallback,
 } from './handlers/settings.handler';
 
+import { startServer } from './server';
+
 // Validate configuration
 config.validate();
 
 // Create bot instance
 const bot = new Telegraf<BotContext>(config.botToken);
 
+// =======================
 // Commands
+// =======================
+
 bot.command('start', startHandler);
 bot.command('balance', balanceHandler);
 bot.command('history', historyHandler);
@@ -94,16 +100,18 @@ bot.command('cancel', async (ctx) => {
   const currentState = await stateManager.getStateWithCheck(userId);
 
   if (!currentState) {
-    // No active state or state expired
     await ctx.reply(getTimeoutMessage());
   } else {
-    // Active state - cancel it
     await stateManager.clearState(userId);
     await ctx.reply(getCancelMessage());
   }
 });
 
+// =======================
 // Callback query handlers
+// =======================
+
+// Onboarding callbacks
 bot.action(/^currency_(.+)$/, onboardingCurrencyCallback);
 
 // Menu callbacks
@@ -130,6 +138,7 @@ bot.action('tutorial_begin', tutorialBeginCallback);
 bot.action('tutorial_skip', tutorialSkipCallback);
 bot.action('tutorial_commands', tutorialCommandsCallback);
 bot.action('tutorial_finish', tutorialFinishCallback);
+// (If you use `tutorialCompleteHandler` somewhere else, keep it there)
 
 // Universal cancel action
 bot.action('action_cancel', async (ctx) => {
@@ -139,6 +148,7 @@ bot.action('action_cancel', async (ctx) => {
   await ctx.reply(getCancelMessage());
 });
 
+// Transaction callbacks
 bot.action('tx_confirm', confirmTransactionCallback);
 bot.action('tx_edit', editTransactionCallback);
 bot.action('tx_cancel', cancelTransactionCallback);
@@ -149,6 +159,7 @@ bot.action('tx_back', backToConfirmCallback);
 bot.action(/^tx_select_category_(.+)$/, selectCategoryCallback);
 bot.action(/^tx_select_account_(.+)$/, selectAccountCallback);
 
+// Account callbacks
 bot.action('acc_add', addAccountCallback);
 bot.action('acc_manage', manageAccountsCallback);
 bot.action('acc_back', backToAccountsCallback);
@@ -162,59 +173,89 @@ bot.action(/^history_page_(\d+)$/, historyPageCallback);
 bot.action(/^history_view_(\d+)$/, historyViewCallback);
 bot.action(/^history_back_(\d+)$/, historyBackCallback);
 
-// Text message handler
+// =======================
+// Message handlers
+// =======================
+
 bot.on('text', async (ctx) => {
   const userId = ctx.from.id;
 
-  // Check if user has an active state
   const handled = await stateManager.handleState(userId, ctx);
-
   if (!handled) {
-    // No active state, try to parse as transaction
     await transactionHandler(ctx);
   }
 });
 
-
-// Voice message handler (for future implementation)
 bot.on('voice', async (ctx) => {
   const userId = ctx.from.id;
 
-  // Check if user is in a state (multi-step flow)
   const handled = await stateManager.handleState(userId, ctx);
   if (handled) return;
 
   await voiceHandler(ctx);
 });
 
+// =======================
 // Error handling
+// =======================
+
 bot.catch((err, ctx) => {
   console.error('Ошибка бота:', err);
   ctx.reply('❌ Произошла ошибка. Попробуйте снова.').catch(() => {});
 });
 
-// Launch bot
-bot.launch()
-  .then(() => {
-    console.log('✅ Бот успешно запущен!');
-    console.log(`📡 Базовый URL API: ${config.apiBaseUrl}`);
+// =======================
+// Launch bot with HTTP server
+// =======================
+
+let httpServer: Server;
+
+startServer(bot)
+  .then(({ server }) => {
+    httpServer = server;
+    console.log('✅ Bot and server successfully started!');
+    console.log(`📡 API Base URL: ${config.apiBaseUrl}`);
+    console.log(`🌐 Server Mode: ${config.nodeEnv}`);
   })
   .catch((err) => {
-    console.error('❌ Не удалось запустить бота:', err);
+    console.error('❌ Failed to start bot and server:', err);
     process.exit(1);
   });
 
+// =======================
 // Graceful shutdown
-process.once('SIGINT', async () => {
-  console.log('Останавливаю бота...');
-  bot.stop('SIGINT');
-  await redisModule.disconnect();
-  process.exit(0);
-});
+// =======================
 
-process.once('SIGTERM', async () => {
-  console.log('Останавливаю бота...');
-  bot.stop('SIGTERM');
-  await redisModule.disconnect();
-  process.exit(0);
-});
+const shutdown = async (signal: string) => {
+  console.log(`Received ${signal}, shutting down gracefully...`);
+
+  try {
+    // Stop the bot
+    bot.stop(signal);
+
+    // Close HTTP server
+    if (httpServer) {
+      await new Promise<void>((resolve, reject) => {
+        httpServer.close((err) => {
+          if (err) return reject(err);
+          console.log('✅ HTTP server closed');
+          resolve();
+        });
+      });
+    }
+
+    // Disconnect from Redis
+    await redisModule.disconnect();
+
+    console.log('✅ Shutdown complete');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+};
+
+process.once('SIGINT', () => shutdown('SIGINT'));
+process.once('SIGTERM', () => shutdown('SIGTERM'));
+
+export { bot };

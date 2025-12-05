@@ -95,11 +95,11 @@ export async function transactionHandler(ctx: BotContext) {
     if (error.response?.status === 400) {
       await ctx.reply(
         "🤔 Я не смог понять эту транзакцию.\n\n" +
-          "Попробуйте, например:\n" +
-          '• "Кофе 5000"\n' +
-          '• "Обед 25000"\n' +
-          '• "Получил зарплату 5000000"\n\n' +
-          "Или используйте /add для пошагового ввода."
+        "Попробуйте, например:\n" +
+        '• "Кофе 5000"\n' +
+        '• "Обед 25000"\n' +
+        '• "Получил зарплату 5000000"\n\n' +
+        "Или используйте /add для пошагового ввода."
       );
     } else {
       await ctx.reply(
@@ -164,9 +164,10 @@ export async function confirmTransactionCallback(ctx: BotContext) {
       accountName: account.name,
       categoryName: category?.name || "",
       categorySlug: category?.slug || "",
+      accountBalance: updatedAccount?.balance,
     });
 
-    await updateOrReply(ctx,finalText, {
+    await updateOrReply(ctx, finalText, {
       parse_mode: 'HTML',
     });
 
@@ -175,9 +176,6 @@ export async function confirmTransactionCallback(ctx: BotContext) {
     if (isTutorial) {
       const { tutorialTransactionHandler } = await import("./tutorial.handler");
       await tutorialTransactionHandler(ctx, data);
-    } else {
-      const { showMainMenu } = await import("./menu.handler");
-      await showMainMenu(ctx, true, false);
     }
   } catch (error: any) {
     console.error("Transaction creation error:", error);
@@ -195,8 +193,9 @@ function buildSavedTransactionMessage(options: {
   accountName: string;
   categoryName: string;
   categorySlug: string;
+  accountBalance?: number;
 }) {
-  const { transaction, currencyCode, accountName, categoryName, categorySlug } = options;
+  const { transaction, currencyCode, accountName, categoryName, categorySlug, accountBalance } = options;
   const emoji = getTransactionEmoji(transaction.type);
   const typeText = transaction.type === 'deposit' ? 'Доход' : 'Расход';
   const categoryText = categoryName
@@ -209,7 +208,12 @@ function buildSavedTransactionMessage(options: {
 
   let message = '';
   message += `<b>✅ Транзакция сохранена!</b>\n\n`;
-  message += `${emoji} <b>Тип:</b> ${typeText}\n`;
+  if (accountBalance !== undefined) {
+    message += `💳 <b>Баланс:</b> ${formatAmount(accountBalance, currencyCode)}\n\n`;
+  }
+  message += '---\n';
+
+  message += `\n${emoji} <b>Тип:</b> ${typeText}\n`;
   message += `💰 <b>Сумма:</b> ${formattedAmount} ${currencyCode}\n`;
   message += `📁 <b>Категория:</b> ${categoryText}\n`;
   message += `📊 <b>Счёт:</b> ${accountName}\n`;
@@ -219,6 +223,8 @@ function buildSavedTransactionMessage(options: {
     message += `\n📝 <b>Комментарий:</b>\n`;
     message += `<code>${escapeHtml(transaction.note)}</code>\n`;
   };
+
+  message += `\n<i>Нажмите /start чтобы вернуться в главное меню</i>`;
 
   return message;
 }

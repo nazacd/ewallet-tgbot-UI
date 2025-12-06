@@ -4,14 +4,14 @@ import { BotContext } from '../types';
 import { apiClient } from '../services/api.client';
 import { formatAmount, getCategoryEmoji } from '../utils/format';
 
-export async function statsHandler(ctx: BotContext) {
+export async function statsHandler(ctx: BotContext, period?: 'month' | 'week' | 'day') {
   const tgUserId = ctx.from.id;
 
   try {
     const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
 
-    const stats = await apiClient.getStats(ctx);
+    const stats = await apiClient.getStats(ctx, period ? { period } : undefined);
 
     if (!stats || !stats.by_category || stats.by_category.length === 0) {
       await ctx.reply(
@@ -52,8 +52,16 @@ export async function statsHandler(ctx: BotContext) {
 
     const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`;
 
+    // Determine period title
+    const periodTitles = {
+      month: '📅 Месяц',
+      week: '📊 Неделя',
+      day: '📈 День',
+    };
+    const periodTitle = period ? periodTitles[period] : '🗓️ Все время';
+
     // Build message
-    let message = `<b>📊 Статистика расходов</b>\n\n`;
+    let message = `<b>📊 Статистика расходов (${periodTitle})</b>\n\n`;
     message += `<blockquote>`;
     message += `💸 <b>Всего расходов:</b> ${formatAmount(stats.total_expense, currencyCode)}\n`;
     message += `💰 <b>Всего доходов:</b> ${formatAmount(stats.total_income, currencyCode)}\n`;
@@ -64,11 +72,19 @@ export async function statsHandler(ctx: BotContext) {
     });
     message += `</blockquote>`;
 
-    // Send photo with caption and back button
+    // Send photo with caption and period selection buttons
     await ctx.replyWithPhoto(chartUrl, {
       caption: message,
       parse_mode: 'HTML',
       ...Markup.inlineKeyboard([
+        [
+          Markup.button.callback('📅 Месяц', 'stats_period_month'),
+          Markup.button.callback('📊 Неделя', 'stats_period_week'),
+        ],
+        [
+          Markup.button.callback('📈 День', 'stats_period_day'),
+          Markup.button.callback('🗓️ Все время', 'stats_period_all'),
+        ],
         [Markup.button.callback('« Назад в меню', 'stats_to_menu')],
       ]),
     });
@@ -87,4 +103,29 @@ export async function statsToMenuCallback(ctx: any) {
 
   const { showMainMenu } = await import('./menu.handler');
   await showMainMenu(ctx, false);
+}
+
+// Period selection callbacks
+export async function statsPeriodMonthCallback(ctx: any) {
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage().catch(() => {});
+  await statsHandler(ctx, 'month');
+}
+
+export async function statsPeriodWeekCallback(ctx: any) {
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage().catch(() => {});
+  await statsHandler(ctx, 'week');
+}
+
+export async function statsPeriodDayCallback(ctx: any) {
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage().catch(() => {});
+  await statsHandler(ctx, 'day');
+}
+
+export async function statsPeriodAllCallback(ctx: any) {
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage().catch(() => {});
+  await statsHandler(ctx);
 }

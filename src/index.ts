@@ -46,6 +46,10 @@ import { voiceHandler } from './handlers/voice.handler';
 import {
   statsHandler,
   statsToMenuCallback,
+  statsPeriodMonthCallback,
+  statsPeriodWeekCallback,
+  statsPeriodDayCallback,
+  statsPeriodAllCallback,
 } from './handlers/stats.handler';
 import {
   tutorialBeginCallback,
@@ -88,7 +92,7 @@ bot.command('start', startHandler);
 bot.command('balance', balanceHandler);
 bot.command('history', historyHandler);
 bot.command('accounts', accountsHandler);
-bot.command('stats', statsHandler);
+bot.command('stats', (ctx) => statsHandler(ctx));
 bot.command('help', helpHandler);
 bot.command('menu', async (ctx) => {
   await showMainMenu(ctx, false);
@@ -130,6 +134,10 @@ bot.action(/^settings_set_default_(.+)$/, settingsSetDefaultAccountCallback);
 
 // Stats callbacks
 bot.action('stats_to_menu', statsToMenuCallback);
+bot.action('stats_period_month', statsPeriodMonthCallback);
+bot.action('stats_period_week', statsPeriodWeekCallback);
+bot.action('stats_period_day', statsPeriodDayCallback);
+bot.action('stats_period_all', statsPeriodAllCallback);
 
 // Tutorial callbacks
 bot.action('start_tutorial', tutorialBeginCallback);

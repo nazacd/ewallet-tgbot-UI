@@ -253,6 +253,7 @@ class APIClient {
       from?: string;
       to?: string;
       account_id?: string;
+      period?: 'month' | 'week' | 'day';
     }
   ): Promise<TransactionStats> {
     return this.request<TransactionStats>(ctx, {

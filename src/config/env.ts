@@ -6,7 +6,6 @@ export const config = {
   botToken: process.env.BOT_TOKEN || '',
   apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8080/api',
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  openaiApiKey: process.env.OPENAI_API_KEY || '',
 
   // Server configuration
   port: parseInt(process.env.PORT || '3000', 10),

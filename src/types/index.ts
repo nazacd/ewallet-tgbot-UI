@@ -66,7 +66,13 @@ export interface TransactionStats {
   total_income: number;
   total_expense: number;
   balance: number;
-  by_category: {
+  income_by_category: {
+    category_id: number;
+    category_slug: string;
+    category_name: string;
+    total: number;
+  }[];
+  expense_by_category: {
     category_id: number;
     category_slug: string;
     category_name: string;
@@ -112,4 +118,14 @@ export interface StateData {
 
 export interface BotContext extends Context {
   from: NonNullable<Context["from"]>;
+}
+
+export interface DashboardData {
+  period?: string;
+  totalIncome: number;
+  totalExpense: number;
+  currencyCode: string;
+  expensesChart?: Buffer;
+  incomeChart?: Buffer;
+  accountName?: string;
 }

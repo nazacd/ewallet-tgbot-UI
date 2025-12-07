@@ -80,19 +80,16 @@ export async function withProgressMessage<T>(
   message: string,
   action: () => Promise<T>
 ): Promise<T> {
-  const sent = await ctx.reply(message);
+  const { withAnimatedLoader } = await import('./loader');
 
-  try {
-    return await action();
-  } finally {
-    if (sent?.message_id) {
-      try {
-        await ctx.deleteMessage(sent.message_id);
-      } catch (error) {
-        // Message might already be deleted or not editable; ignore.
-      }
-    }
-  }
+  // Create frames by adding dots progressively
+  const frames = [
+    `${message}.`,
+    `${message}..`,
+    `${message}...`,
+  ];
+
+  return withAnimatedLoader(ctx, frames, action);
 }
 
 export const RETRY_HINT =

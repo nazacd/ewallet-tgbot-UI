@@ -50,7 +50,15 @@ import {
   statsPeriodWeekCallback,
   statsPeriodDayCallback,
   statsPeriodAllCallback,
+  statsNavigatePrevCallback,
+  statsNavigateNextCallback,
 } from './handlers/stats.handler';
+import {
+  showStatsSelection,
+  statsSelectOverallCallback,
+  statsSelectAccountCallback,
+  statsChangeAccountCallback,
+} from './handlers/stats.selection.handler';
 import {
   tutorialBeginCallback,
   tutorialSkipCallback,
@@ -134,10 +142,21 @@ bot.action(/^settings_set_default_(.+)$/, settingsSetDefaultAccountCallback);
 
 // Stats callbacks
 bot.action('stats_to_menu', statsToMenuCallback);
-bot.action('stats_period_month', statsPeriodMonthCallback);
-bot.action('stats_period_week', statsPeriodWeekCallback);
-bot.action('stats_period_day', statsPeriodDayCallback);
-bot.action('stats_period_all', statsPeriodAllCallback);
+
+// Stats selection callbacks
+bot.action('stats_select_overall', statsSelectOverallCallback);
+bot.action(/^stats_select_account_(.+)$/, statsSelectAccountCallback);
+bot.action('stats_change_account', statsChangeAccountCallback);
+
+// Stats period callbacks (compact format: s_p{m|w|d|a}_{compactAccId})
+bot.action(/^s_pm_(.+)$/, statsPeriodMonthCallback);  // s_pm_all or s_pm_8749ef70
+bot.action(/^s_pw_(.+)$/, statsPeriodWeekCallback);   // s_pw_all or s_pw_8749ef70
+bot.action(/^s_pd_(.+)$/, statsPeriodDayCallback);    // s_pd_all or s_pd_8749ef70
+bot.action(/^s_pa_(.+)$/, statsPeriodAllCallback);    // s_pa_all or s_pa_8749ef70
+
+// Stats navigation callbacks (compact format: s_n{p|n}_{m|w|d}_{compactAccId}_{compactDate})
+bot.action(/^s_np_([mwd])_(.+)_(\d{8})$/, statsNavigatePrevCallback);  // s_np_m_all_20251207
+bot.action(/^s_nn_([mwd])_(.+)_(\d{8})$/, statsNavigateNextCallback);  // s_nn_m_all_20251207
 
 // Tutorial callbacks
 bot.action('start_tutorial', tutorialBeginCallback);

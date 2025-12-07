@@ -112,11 +112,11 @@ export async function menuHistoryCallback(ctx: any) {
 export async function menuStatsCallback(ctx: any) {
   await ctx.answerCbQuery();
 
-  // Delete menu message and show stats (stats sends image)
+  // Delete menu message and show stats selection
   await ctx.deleteMessage().catch(() => {});
 
-  const { statsHandler } = await import('./stats.handler');
-  await statsHandler(ctx);
+  const { showStatsSelection } = await import('./stats.selection.handler');
+  await showStatsSelection(ctx);
 }
 
 /**

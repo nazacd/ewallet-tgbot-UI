@@ -1,12 +1,24 @@
-# Build stage
-FROM node:20-alpine AS builder
+# ======================
+# 1) Build stage
+# ======================
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# System deps for node-canvas / node-gyp
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    make \
+    g++ \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Copy package files and install deps
+COPY package*.json ./
 RUN npm ci
 
 # Copy source code
@@ -15,36 +27,34 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
-
-# Install libcairo2-dev libpango1.0-dev libgif-dev build-essential
-
-RUN apk add --no-cache build-base cairo-dev pango-dev giflib-dev
+# ======================
+# 2) Production stage
+# ======================
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Runtime libs only (no -dev, no compilers)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2 \
+    libpango-1.0-0 \
+    libjpeg62-turbo \
+    libgif7 \
+    librsvg2-2 \
+  && rm -rf /var/lib/apt/lists/*
 
-# Install production dependencies only
-RUN npm ci --only=production
-
-# Copy built application from builder
+# Copy app + node_modules from builder
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN groupadd -g 1001 nodejs && \
+    useradd -m -u 1001 -g nodejs nodejs
 
-# Change ownership
 RUN chown -R nodejs:nodejs /app
-
-# Switch to non-root user
 USER nodejs
 
-# Expose port if needed (optional, depends on your app)
 # EXPOSE 3000
 
-# Start the application
 CMD ["node", "dist/index.js"]

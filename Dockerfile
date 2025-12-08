@@ -19,7 +19,8 @@ RUN npm run build
 FROM node:20-alpine
 
 # Install libcairo2-dev libpango1.0-dev libgif-dev build-essential
-RUN apk add --no-cache libcairo2-dev libpango1.0-dev libgif-dev build-essential
+
+RUN apk add --no-cache build-base cairo-dev pango-dev giflib-dev
 
 WORKDIR /app
 

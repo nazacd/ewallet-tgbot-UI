@@ -34,14 +34,19 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# Runtime libs only (no -dev, no compilers)
+# Runtime libs + Chromium for Puppeteer
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
     libjpeg62-turbo \
     libgif7 \
     librsvg2-2 \
+    chromium \
   && rm -rf /var/lib/apt/lists/*
+
+# 👉 Скажем Puppeteer, где лежит браузер
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Copy app + node_modules from builder
 COPY --from=builder /app/package*.json ./

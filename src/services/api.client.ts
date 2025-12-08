@@ -16,7 +16,7 @@ class APIClient {
   constructor() {
     this.client = axios.create({
       baseURL: config.apiBaseUrl,
-      timeout: 10000,
+      timeout: 60000,
     });
   }
 

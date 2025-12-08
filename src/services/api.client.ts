@@ -162,6 +162,17 @@ class APIClient {
     });
   }
 
+  async parseImage(
+    ctx: any,
+    image_url: string,
+  ): Promise<ParsedTransaction> {
+    return this.request<ParsedTransaction>(ctx, {
+      method: "POST",
+      url: "/parse/image",
+      data: { image_url },
+    });
+  }
+
   async createTransaction(
     ctx: any,
     data: {

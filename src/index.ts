@@ -43,6 +43,7 @@ import {
 } from './handlers/accounts.handler';
 import { helpHandler } from './handlers/help.handler';
 import { voiceHandler } from './handlers/voice.handler';
+import { photoHandler } from './handlers/photo.handler';
 import {
   statsHandler,
   statsToMenuCallback,
@@ -220,6 +221,15 @@ bot.on('voice', async (ctx) => {
   if (handled) return;
 
   await voiceHandler(ctx);
+});
+
+bot.on('photo', async (ctx) => {
+  const userId = ctx.from.id;
+
+  const handled = await stateManager.handleState(userId, ctx);
+  if (handled) return;
+
+  await photoHandler(ctx);
 });
 
 // =======================

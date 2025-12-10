@@ -36,7 +36,7 @@ class APIClient {
     });
 
     if (!token) {
-        throw new Error("User not authenticated");
+      throw new Error("User not authenticated");
     }
 
     try {
@@ -50,8 +50,13 @@ class APIClient {
 
       return response.data;
     } catch (error: any) {
-      // Handle token expiration (401 or 403)
-      if ((error.response?.status === 401 || error.response?.status === 403) && !isRetry) {
+      // Handle token expiration (401 or 403) or missing user (404 on /users/me)
+      if (
+        (error.response?.status === 401 ||
+          error.response?.status === 403 ||
+          (error.response?.status === 404 && requestConfig.url === "/users/me")) &&
+        !isRetry
+      ) {
         try {
           // Clear expired token
           await authService.clearToken(tgUserId);

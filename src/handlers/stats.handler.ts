@@ -3,8 +3,8 @@ import { BotContext } from '../types';
 import { apiClient } from '../services/api.client';
 import { formatAmount, getCategoryEmoji } from '../utils/format';
 import { withAnimatedLoader, STATS_FRAMES } from '../utils/loader';
-import { renderBarChart } from '../services/charts/barChart';
-import { generateStoryDashboard } from '../services/dashboard/storyDashboard';
+import { renderPieChart } from '../services/charts/pieChart';
+import { generateDesktopDashboard } from '../services/dashboard/desktopDashboard';
 
 /**
  * Calculate date range based on period and start date
@@ -27,7 +27,7 @@ function calculateDateRange(period: 'month' | 'week' | 'day' | undefined, startD
     const to = new Date(year, month + 1, 0); // Last day of month
 
     const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-                        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+      'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     const displayRange = `${monthNames[month]} ${year}`;
 
     return {
@@ -209,10 +209,10 @@ export async function statsHandler(
         value: Math.abs(c.total),
       }));
 
-      // Sort and take top 6, group rest into "Other"
+      // Sort and take top 5, group rest into "Other"
       const sorted = expenseData.sort((a, b) => b.value - a.value);
-      const top = sorted.slice(0, 6);
-      const rest = sorted.slice(6);
+      const top = sorted.slice(0, 5);
+      const rest = sorted.slice(5);
 
       if (rest.length > 0) {
         top.push({
@@ -229,7 +229,7 @@ export async function statsHandler(
       });
       const values = top.map(item => item.value);
 
-      expensesChart = await renderBarChart(labels, values, '💸 Расходы по категориям');
+      expensesChart = await renderPieChart(labels, values, '💸 Расходы по категориям');
     }
 
     // Generate income chart if data exists
@@ -239,10 +239,10 @@ export async function statsHandler(
         value: Math.abs(c.total),
       }));
 
-      // Sort and take top 6, group rest into "Other"
+      // Sort and take top 5, group rest into "Other"
       const sorted = incomeData.sort((a, b) => b.value - a.value);
-      const top = sorted.slice(0, 6);
-      const rest = sorted.slice(6);
+      const top = sorted.slice(0, 5);
+      const rest = sorted.slice(5);
 
       if (rest.length > 0) {
         top.push({
@@ -259,11 +259,11 @@ export async function statsHandler(
       });
       const values = top.map(item => item.value);
 
-      incomeChart = await renderBarChart(labels, values, '💰 Доходы по категориям');
+      incomeChart = await renderPieChart(labels, values, '💰 Доходы по категориям');
     }
 
     // Generate dashboard
-    const dashboard = await generateStoryDashboard({
+    const dashboard = await generateDesktopDashboard({
       period: displayRange,
       totalIncome: stats.total_income,
       totalExpense: Math.abs(stats.total_expense),
@@ -387,7 +387,7 @@ function buildStatsKeyboard(
 export async function statsToMenuCallback(ctx: any) {
   await ctx.answerCbQuery();
   // Delete stats message (has image) and show menu
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   const { showMainMenu } = await import('./menu.handler');
   await showMainMenu(ctx, false);
@@ -416,7 +416,7 @@ export async function statsPeriodMonthCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(
     ctx,
@@ -430,7 +430,7 @@ export async function statsPeriodWeekCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(
     ctx,
@@ -444,7 +444,7 @@ export async function statsPeriodDayCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(
     ctx,
@@ -458,7 +458,7 @@ export async function statsPeriodAllCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(
     ctx,
@@ -485,7 +485,7 @@ export async function statsNavigatePrevCallback(ctx: any) {
   const prevDate = calculatePreviousPeriod(period, currentDate);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(
     ctx,
@@ -511,7 +511,7 @@ export async function statsNavigateNextCallback(ctx: any) {
   const nextDate = calculateNextPeriod(period, currentDate);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(
     ctx,

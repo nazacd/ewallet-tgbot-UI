@@ -11,6 +11,7 @@ import {
   onboardingCurrencyCallback,
   accountNameHandler,
   onboardingBalanceHandler,
+  onboardingSkipAccountHandler,
 } from './handlers/start.handler';
 import {
   transactionHandler,
@@ -126,6 +127,7 @@ bot.command('cancel', async (ctx) => {
 
 // Onboarding callbacks
 bot.action(/^currency_(.+)$/, onboardingCurrencyCallback);
+bot.action('onboarding_skip_account', onboardingSkipAccountHandler);
 
 // Menu callbacks
 bot.action('menu_accounts', menuAccountsCallback);
@@ -172,7 +174,7 @@ bot.action('tutorial_finish', tutorialFinishCallback);
 bot.action('action_cancel', async (ctx) => {
   await ctx.answerCbQuery('Операция отменена');
   await stateManager.clearState(ctx.from.id);
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
   await ctx.reply(getCancelMessage());
 });
 
@@ -238,7 +240,7 @@ bot.on('photo', async (ctx) => {
 
 bot.catch((err, ctx) => {
   console.error('Ошибка бота:', err);
-  ctx.reply('❌ Произошла ошибка. Попробуйте снова.').catch(() => {});
+  ctx.reply('❌ Произошла ошибка. Попробуйте снова.').catch(() => { });
 });
 
 // =======================

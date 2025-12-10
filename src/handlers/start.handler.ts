@@ -105,7 +105,7 @@ export async function onboardingCurrencyCallback(ctx: any) {
     await ctx.reply(
       message,
       Markup.inlineKeyboard([
-        [buildCancelButton('⏭ Пропустить создание счета')],
+        [Markup.button.callback('⏭ Пропустить создание счета', 'onboarding_skip_account')],
       ])
     );
   } catch (error: any) {
@@ -126,7 +126,7 @@ export async function accountNameHandler(ctx: any, data: any) {
 
   // Store the name and move to balance step
   await stateManager.setState(ctx.from.id, 'ONBOARDING_BALANCE', {
-    onboardingData: { name: accountName, currency: data.onboardingData.currency},
+    onboardingData: { name: accountName, currency: data.onboardingData.currency },
     stepInfo: { current: 3, total: 4, name: 'Начальный баланс' }
   });
 
@@ -196,3 +196,55 @@ export async function onboardingBalanceHandler(ctx: any, data: any) {
 // Register state handlers
 stateManager.register('ONBOARDING_ACCOUNT_NAME', accountNameHandler);
 stateManager.register('ONBOARDING_BALANCE', onboardingBalanceHandler);
+
+// Skip account creation handler
+export async function onboardingSkipAccountHandler(ctx: any) {
+  const tgUserId = ctx.from.id;
+  const stateData = await stateManager.getData(tgUserId);
+  const currency = stateData?.onboardingData?.currency;
+
+  if (!currency) {
+    await ctx.reply('Что-то пошло не так. Попробуйте снова с /start');
+    await stateManager.clearState(tgUserId);
+    return;
+  }
+
+  try {
+    const accountName = "Основной счет";
+    const balance = 0;
+
+    // Create the default account
+    const account = await apiClient.createAccount(ctx, {
+      name: accountName,
+      balance: balance,
+      is_default: true,
+    });
+
+    await ctx.answerCbQuery();
+    await ctx.deleteMessage(); // Remove the "Create account" prompt
+
+    const message = createStepMessage(
+      4, 4, 'Настройка завершена!',
+      `✅ Счёт успешно создан автоматечески!\n\n` +
+      `📊 ${account.name}\n` +
+      `💰 Баланс: ${balance.toLocaleString()} ${currency}\n\n` +
+      `🎉 Отличная работа! Теперь всё готово к использованию.`
+    );
+
+    await ctx.reply(
+      message,
+      Markup.inlineKeyboard([
+        [Markup.button.callback('✨ Пройти обучение', 'start_tutorial')],
+        [Markup.button.callback('🚀 Начать пользоваться', 'skip_tutorial')],
+      ])
+    );
+
+    // Don't clear state yet - wait for tutorial decision
+  } catch (error: any) {
+    console.error('Skip callback error:', error);
+    await ctx.reply(
+      `❌ Не удалось создать счёт. ${RETRY_HINT}`
+    );
+    await stateManager.clearState(tgUserId);
+  }
+}

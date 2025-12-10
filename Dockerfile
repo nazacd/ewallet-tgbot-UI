@@ -42,6 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgif7 \
     librsvg2-2 \
     chromium \
+    fonts-noto-color-emoji \
   && rm -rf /var/lib/apt/lists/*
 
 # 👉 Скажем Puppeteer, где лежит браузер

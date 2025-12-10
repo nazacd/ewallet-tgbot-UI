@@ -236,9 +236,17 @@ bot.on('photo', async (ctx) => {
 // Error handling
 // =======================
 
+import { CRITICAL_ERROR_MESSAGE } from './utils/messages';
+
+// ... (imports)
+
+// =======================
+// Error handling
+// =======================
+
 bot.catch((err, ctx) => {
   console.error('Ошибка бота:', err);
-  ctx.reply('❌ Произошла ошибка. Попробуйте снова.').catch(() => {});
+  ctx.reply(CRITICAL_ERROR_MESSAGE).catch(() => {});
 });
 
 // =======================

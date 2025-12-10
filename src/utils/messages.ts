@@ -94,3 +94,6 @@ export async function withProgressMessage<T>(
 
 export const RETRY_HINT =
   "Попробуйте ещё раз или начните заново с /start, чтобы обновить данные.";
+
+export const CRITICAL_ERROR_MESSAGE =
+  "❌ Произошла критическая ошибка. Пожалуйста, напишите @AsaHero для поддержки.";

@@ -248,11 +248,7 @@ import { CRITICAL_ERROR_MESSAGE } from './utils/messages';
 
 bot.catch((err, ctx) => {
   console.error('Ошибка бота:', err);
-<<<<<<< HEAD
-  ctx.reply('❌ Произошла ошибка. Попробуйте снова.').catch(() => { });
-=======
   ctx.reply(CRITICAL_ERROR_MESSAGE).catch(() => {});
->>>>>>> ff6cac3239433969b7f0744a80561126ee335932
 });
 
 // =======================

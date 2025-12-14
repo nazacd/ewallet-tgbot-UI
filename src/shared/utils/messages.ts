@@ -1,12 +1,8 @@
 import { Markup } from 'telegraf';
 import { BotContext, ParsedTransaction } from '../../core/types';
-import { formatAmount, getCategoryEmoji, getTransactionEmoji, escapeHtml } from './format';
+import { formatAmount, getCategoryEmoji, getTransactionEmoji, escapeHtml, formatFxRate } from './format';
 import { t, Language } from './i18n';
-function formatFxRate(rate?: number) {
-  if (!rate || Number.isNaN(rate)) return '';
-  // keep simple but readable
-  return rate >= 1 ? rate.toFixed(4) : rate.toPrecision(6);
-}
+
 
 export function buildTransactionSummary({
   parsed,

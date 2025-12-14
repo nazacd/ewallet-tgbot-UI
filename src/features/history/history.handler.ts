@@ -10,6 +10,7 @@ import {
   formatCompactAmount,
   convertToTimezone,
   formatDateTime,
+  formatFxRate,
 } from '../../shared/utils/format';
 import { stateManager } from '../../core/state/state.manager';
 import { buildCloseButton } from '../menu/menu.handler';
@@ -360,6 +361,18 @@ export async function historyViewCallback(ctx: any) {
   message += `<b>${t('history.details_title', lang, [num])}</b>\n\n`;
   message += `${emoji} <b>${t('history.type', lang)}:</b> ${typeText}\n`;
   message += `💰 <b>${t('history.amount', lang)}:</b> ${formattedAmount}\n`;
+  // ✅ If conversion exists, show original + rate
+  const hasFx =
+    tx.original_amount !== undefined &&
+    !!tx.original_currency_code &&
+    tx.original_currency_code !== tx.currency_code;
+
+  if (hasFx) {
+    message += `💱 <b>Original</b>: ${formatAmount(tx.original_amount!, tx.original_currency_code!)} ${tx.original_currency_code}\n`;
+    if (tx.fx_rate) {
+      message += `📈 <b>FX</b>: ${formatFxRate(tx.fx_rate)} (${tx.original_currency_code} → ${tx.currency_code})\n`;
+    }
+  }
   message += `📁 <b>${t('history.category', lang)}:</b> ${categoryText}\n`;
   message += `📊 <b>${t('history.account', lang)}:</b> ${accountName}\n`;
   message += `📅 <b>${t('history.date', lang)}:</b> ${dateStr}\n`;

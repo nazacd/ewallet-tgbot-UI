@@ -8,6 +8,7 @@ import {
   getCategoryEmoji,
   escapeHtml,
   formatDate,
+  formatFxRate,
 } from '../../shared/utils/format';
 import {
   buildConfirmationKeyboard,
@@ -230,6 +231,18 @@ function buildSavedTransactionMessage(options: {
   message += `\n${typeText}\n`;
 
   message += `💰 <b>${t('transaction.amount', lang)}:</b> ${formattedAmount}\n`;
+    // ✅ If conversion exists, show original + rate
+  const hasFx =
+    transaction.original_amount !== undefined &&
+    !!transaction.original_currency_code &&
+    transaction.original_currency_code !== transaction.currency_code;
+
+  if (hasFx) {
+    message += `💱 <b>Original</b>: ${formatAmount(transaction.original_amount!, transaction.original_currency_code!)} ${transaction.original_currency_code}\n`;
+    if (transaction.fx_rate) {
+      message += `📈 <b>FX</b>: ${formatFxRate(transaction.fx_rate)} (${transaction.original_currency_code} → ${currencyCode})\n`;
+    }
+  }
   message += `📁 <b>${t('transaction.category', lang)}:</b> ${categoryText}\n`;
   message += `📊 <b>${t('transaction.account', lang)}:</b> ${accountName}\n`;
   message += `📅 <b>${t('transaction.date', lang)}:</b> ${dateStr}\n`;

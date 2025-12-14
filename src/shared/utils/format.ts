@@ -176,3 +176,9 @@ export function formatCompactAmount(amount: number): string {
 
   return abs.toString();
 }
+
+export function formatFxRate(rate?: number) {
+  if (!rate || Number.isNaN(rate)) return '';
+  // keep simple but readable
+  return rate >= 1 ? rate.toFixed(4) : rate.toPrecision(6);
+}

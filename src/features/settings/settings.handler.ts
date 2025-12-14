@@ -24,8 +24,13 @@ export async function showSettings(ctx: any): Promise<void> {
       parse_mode: 'HTML',
       ...Markup.inlineKeyboard([
         [Markup.button.callback(t('settings.change_currency', lang), 'settings_change_currency')],
-        [Markup.button.callback(t('settings.change_default_account', lang), 'settings_default_account')],
-        [Markup.button.callback(t('settings.back_to_menu', lang), 'back_to_menu')],
+        [
+          Markup.button.callback(
+            t('settings.change_default_account', lang),
+            'settings_default_account',
+          ),
+        ],
+        [Markup.button.callback(t('buttons.close', lang), 'settings_close')],
       ]),
     });
   } catch (error) {
@@ -75,22 +80,21 @@ export async function settingsSetCurrencyCallback(ctx: any) {
     // For now, we'll just show a message
     // If API exists: await apiClient.updateCurrency(ctx, currency);
 
-    await ctx.editMessageText(
-      t('settings.currency_changed', lang, [currency]),
-      {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([
-          [Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')],
-        ]),
-      },
-    );
+    await ctx.editMessageText(t('settings.currency_changed', lang, [currency]), {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')],
+      ]),
+    });
   } catch (error) {
     console.error('Error setting currency:', error);
     const user = await apiClient.getMe(ctx);
     const lang = (user.language_code || 'ru') as Language;
     await ctx.editMessageText(t('settings.currency_change_error', lang), {
       parse_mode: 'HTML',
-      ...Markup.inlineKeyboard([[Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')]]),
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')],
+      ]),
     });
   }
 }
@@ -152,7 +156,9 @@ export async function settingsSetDefaultAccountCallback(ctx: any) {
 
     await ctx.editMessageText(t('settings.account_changed', lang), {
       parse_mode: 'HTML',
-      ...Markup.inlineKeyboard([[Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')]]),
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')],
+      ]),
     });
   } catch (error) {
     console.error('Error setting default account:', error);
@@ -160,7 +166,54 @@ export async function settingsSetDefaultAccountCallback(ctx: any) {
     const lang = (user.language_code || 'ru') as Language;
     await ctx.editMessageText(t('settings.account_change_error', lang), {
       parse_mode: 'HTML',
-      ...Markup.inlineKeyboard([[Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')]]),
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback(t('settings.back_to_settings', lang), 'menu_settings')],
+      ]),
     });
   }
+}
+
+/**
+ * Back to settings callback
+ */
+export async function backToSettingsCallback(ctx: any) {
+  await ctx.answerCbQuery();
+
+  let lang: Language = 'ru';
+  try {
+    const user = await apiClient.getMe(ctx);
+    lang = (user.language_code || 'ru') as Language;
+    const accounts = await apiClient.getAccounts(ctx);
+    const defaultAccount = accounts.find((a) => a.is_default);
+
+    const message =
+      `${t('settings.title', lang)}\n\n` +
+      `${t('settings.current_currency', lang)}: ${user.currency_code || 'USD'}\n` +
+      `${t('settings.default_account', lang)}: ${defaultAccount?.name || t('settings.not_set', lang)}\n`;
+
+    await ctx.editMessageText(message, {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback(t('settings.change_currency', lang), 'settings_change_currency')],
+        [
+          Markup.button.callback(
+            t('settings.change_default_account', lang),
+            'settings_default_account',
+          ),
+        ],
+        [Markup.button.callback(t('buttons.close', lang), 'settings_close')],
+      ]),
+    });
+  } catch (error) {
+    console.error('Error showing settings:', error);
+    await ctx.reply(t('errors.critical', lang));
+  }
+}
+
+/**
+ * Close settings callback
+ */
+export async function settingsCloseCallback(ctx: any) {
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage().catch(() => {});
 }

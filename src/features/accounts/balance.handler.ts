@@ -30,7 +30,7 @@ export async function balanceHandler(ctx: BotContext) {
       message += `\n📊 Итого: ${formatAmount(total, currencyCode)}`;
     }
 
-    await ctx.reply(message);
+    await ctx.reply(message, { parse_mode: 'HTML' });
   } catch (error: any) {
     console.error('Balance handler error:', error);
     await ctx.reply('❌ Не удалось получить балансы. Попробуйте снова.');

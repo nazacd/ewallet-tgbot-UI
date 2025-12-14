@@ -3,86 +3,103 @@ export type Language = 'ru' | 'uz';
 export const messages = {
   ru: {
     onboarding: {
-      language_prompt: 'Выберите язык / Tilni tanlang',
+      language_prompt: '🌍 Выберите язык / Tilni tanlang',
 
-      problem: `Ты зарабатываешь и тратишь деньги —
-но в конце месяца не понимаешь, куда они ушли.
+      problem: `💸 <b>Знакомая ситуация?</b>
 
-Чеки теряются, заметки забываются,
-таблицы — неудобны.`,
+Деньги уходят — а куда непонятно.
+Чеки теряются, заметки забываются, таблицы неудобны.`,
 
-      benefits: `Я помогу тебе видеть:
-– сколько ты реально тратишь
-– на что уходит больше всего
-– сколько остаётся
+      benefits: `✨ <b>Я помогу тебе видеть:</b>
 
-Без таблиц. Без ручного учёта.
+💰 Сколько ты реально тратишь
+📊 Куда уходит больше всего
+✅ Сколько остаётся
 
-Большинство людей бросают учёт через 7 дней.
+<i>Без таблиц. Без ручного учёта.</i>
+
+⏱ Большинство людей бросают учёт через 7 дней.
 Поэтому мы сделали его одним сообщением.`,
 
-      first_expense: `Напиши любой расход простым текстом.
-Например:
+      first_expense: `📝 <b>Попробуй прямо сейчас</b>
+
+Напиши любой расход простым текстом:
 
 <code>Кофе 18 000</code>
 <code>Такси 25к</code>
 
-Не бойся ошибиться — я подскажу.`,
+Не бойся ошибиться — я подскажу! 😊`,
 
-      advanced: `Кстати, можно точнее 👇
+      advanced: `💡 <b>Можно точнее:</b>
 
-– указать дату: <i>вчера</i>, <i>10 мая</i>
-– указать счёт: <i>наличные</i>, <i>карта</i>
-– добавить комментарий
+📅 Указать дату: <i>вчера</i>, <i>10 мая</i>
+💳 Указать счёт: <i>наличные</i>, <i>карта</i>
+📝 Добавить комментарий
 
-Пример:
+<b>Пример:</b>
 <code>Такси 25 000 вчера с карты</code>`,
 
-      account_concept: `У тебя могут быть разные источники денег:
+      account_concept: `💼 <b>Что такое «счета»?</b>
+
+У тебя могут быть разные источники денег:
+
 💵 Наличные в кошельке
 💳 Банковская карта
 🏦 Накопительный счёт
 💰 Электронный кошелёк
 
-Мы будем называть их «счетами».
-Это помогает видеть, сколько где лежит.`,
+Мы будем называть их «счетами» — так ты увидишь, сколько где лежит.`,
 
-      currency_prompt: 'Сперва выбери валюту:',
+      currency_prompt: '💱 <b>Выбери валюту:</b>',
 
-      account_name: `Как назовем твой первый счёт?
+      account_name: `📊 <b>Название счёта</b>
 
-Примеры:
+Как назовём твой первый счёт?
+
+<b>Примеры:</b>
 • Наличные
 • Основная карта
 • Humo
 • Кошелёк`,
 
-      balance_prompt: `Какой сейчас баланс на этом счёте?
+      balance_prompt: `💰 <b>Текущий баланс</b>
+
+Сколько сейчас на этом счёте?
 
 Введи число (или 0, если начинаешь с нуля).`,
 
-      timezone_prompt: `Чтобы лучше подстроиться, выбери часовой пояс.
+      timezone_prompt: `🕐 <b>Часовой пояс</b>
+
+Чтобы лучше подстроиться, выбери часовой пояс.
 
 Напиши название города или отправь геолокацию 📍`,
 
       completion: (accountName: string, balance: string, currency: string, timezone: string) =>
-        `✅ Всё готово!
-Твой счёт "${accountName}" создан.
-Баланс: ${balance} ${currency}
-Часовой пояс: ${timezone}
+        `✅ <b>Всё готово!</b>
 
-Теперь ты можешь записывать расходы и доходы. Просто напиши мне или отправь голосовое сообщение.`,
+📊 Счёт: <b>${accountName}</b>
+💰 Баланс: <b>${balance} ${currency}</b>
+🕐 Часовой пояс: ${timezone}
+
+Теперь просто напиши или отправь голосовое сообщение! 🎤`,
+
       errors: {
-        parse_expense: '🤔 Попробуй еще раз. Например: "Кофе 5000"',
-        city_not_found: '🤔 Город не найден. Попробуй еще раз или выбери из кнопок.',
-        account_creation: '❌ Не удалось создать счёт. Попробуй /start снова.',
+        parse_expense: '🤔 Попробуй так: <code>Кофе 5000</code>',
+        city_not_found: '🤔 Город не найден. Попробуй другой или выбери из кнопок.',
+        account_creation: '❌ Ошибка создания счёта. Попробуй /start заново.',
       },
+
       tutorial: {
         category_other: 'Прочее',
         date_today: 'сегодня',
         default_account: 'Основной счет',
         confirmation_message: (amount: number, categoryName: string, accountName: string, date: string) =>
-          `Я понял 👌\n\n💰 Расход: ${amount} сум\n📁 Категория: ${categoryName}\n📊 Счёт: ${accountName}\n📅 Дата: ${date}`,
+          `✅ <b>Понял!</b>
+
+💰 Расход: <b>${amount} сум</b>
+📁 Категория: ${categoryName}
+📊 Счёт: ${accountName}
+📅 Дата: ${date}`,
       },
     },
 
@@ -90,16 +107,17 @@ export const messages = {
       russian: '🇷🇺 Русский',
       uzbek: "🇺🇿 O'zbekcha",
 
-      understood: 'Понятно, это про меня →',
-      lets_try: 'Хорошо, давай попробуем',
+      understood: 'Это про меня 👉',
+      lets_try: 'Давай попробуем ✨',
       save: '✅ Сохранить',
       edit: '✏️ Изменить',
-      got_it: 'Понятно →',
-      lets_start: 'Понятно, начнем →',
+      got_it: 'Понятно 👌',
+      lets_start: 'Начнём! 🚀',
       start_using: '🚀 Начать пользоваться',
 
-      close: 'Закрыть',
-      back: 'Назад',
+      close: '✖️ Закрыть',
+      back: '◀️ Назад',
+      send_location: '📍 Моя геолокация',
     },
 
     menu: {
@@ -108,130 +126,168 @@ export const messages = {
       history: '📜 История',
       stats: '📈 Статистика',
       settings: '⚙️ Настройки',
-      main_prompt: '🏠 Главное меню\n\nВыбери действие из меню ниже:',
+      main_prompt: '🏠 <b>Главное меню</b>',
       add_transaction_help: `➕ <b>Добавить транзакцию</b>
 
-Отправь транзакцию текстом, голосом или фото чека.
+Отправь текст ✏️, голос 🎤 или фото чека 📸
 
-📝 Примеры:
-• "Кофе 5000"
-• "Ужин 50000"
-• "Зарплата 5000000"
-
-🎤 Голосовое сообщение
-📸 Фото чека`,
+<b>📝 Примеры:</b>
+• Кофе 5000
+• Ужин 50000
+• Зарплата 5000000`,
     },
 
     settings: {
-      title: '⚙️ Настройки',
+      title: '⚙️ <b>Настройки</b>',
       current_currency: '💱 Текущая валюта',
       default_account: '📊 Счёт по умолчанию',
       not_set: 'Не установлен',
-      change_currency: '💱 Изменить валюту',
+      change_currency: '💱 Сменить валюту',
       change_default_account: '📊 Счёт по умолчанию',
-      back_to_menu: '« Назад в меню',
-      back_to_settings: '« Назад к настройкам',
-      choose_currency: '💱 <b>Выбор валюты</b>\n\nВыберите валюту для ваших счетов:',
-      currency_changed: (currency: string) => `✅ Валюта успешно изменена на <b>${currency}</b>\n\n⚠️ Примечание: Существующие счета сохранят свою валюту.`,
-      currency_change_error: '❌ Не удалось изменить валюту. Попробуйте позже.',
-      no_accounts: '❌ У вас нет счетов. Создайте счёт сначала.',
-      choose_account: '📊 <b>Выбор счёта по умолчанию</b>\n\nВыберите счёт:',
-      account_changed: '✅ Счёт по умолчанию успешно изменён!',
-      account_change_error: '❌ Не удалось изменить счёт по умолчанию.',
+      back_to_menu: '◀️ В меню',
+      back_to_settings: '◀️ К настройкам',
+      choose_currency: '💱 <b>Выбор валюты</b>\n\nВыбери валюту для новых счетов:',
+      currency_changed: (currency: string) =>
+        `✅ Валюта изменена на <b>${currency}</b>\n\n💡 Существующие счета сохранят свою валюту.`,
+      currency_change_error: '❌ Не удалось изменить валюту',
+      no_accounts: '❌ У тебя нет счетов. Создай первый через /start',
+      choose_account: '📊 <b>Счёт по умолчанию</b>\n\nВыбери основной счёт:',
+      account_changed: '✅ Счёт по умолчанию изменён',
+      account_change_error: '❌ Не удалось изменить счёт',
     },
 
     start: {
-      error: '❌ Не удалось начать. Попробуйте еще раз.',
+      error: '❌ Что-то пошло не так. Попробуй ещё раз.',
     },
 
     stats: {
-      title: '📊 Статистика',
-      no_transactions: '📊 У вас пока нет транзакций для отображения статистики за этот период.\n\nДобавьте несколько транзакций или попробуйте другой период.',
-      expenses_by_category: '💸 Расходы по категориям',
-      income_by_category: '💰 Доходы по категориям',
+      title: '📈 <b>Статистика</b>',
+      no_transactions: `📊 <b>Пока пусто</b>
+
+Добавь несколько транзакций или выбери другой период.`,
+
+      expenses_by_category: '💸 <b>Расходы по категориям</b>',
+      income_by_category: '💰 <b>Доходы по категориям</b>',
       other: 'Прочее',
       total_expenses: '💸 Всего расходов',
       total_income: '💰 Всего доходов',
       balance: '📊 Баланс',
       expenses_title: '💸 Расходы',
       income_title: '💰 Доходы',
-      error: '❌ Не удалось получить статистику. Попробуйте позже.',
+      error: '❌ Не удалось загрузить статистику',
+
       periods: {
         month: 'Месяц',
         week: 'Неделя',
         day: 'День',
-        all: '🗓️ Все время',
+        all: '🗓️ Всё время',
       },
+
       change_account: '🔄 Сменить счёт',
-      back_to_menu: '« Назад в меню',
+      back_to_menu: '◀️ В меню',
+
       months: [
         'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
         'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
       ],
+
       selection: {
-        no_accounts: '❌ У вас ещё нет счетов. Используйте /start, чтобы создать первый.',
+        no_accounts: '❌ Нет счетов. Создай первый через /start',
         overall: '📊 Общая статистика',
-        message: '<b>📊 Статистика</b>\n\nВыберите счёт для просмотра статистики или посмотрите общую статистику по всем счетам:',
-        error: '❌ Не удалось загрузить список счетов. Попробуйте позже.',
+        message: '📈 <b>Статистика</b>\n\nВыбери счёт или посмотри общую статистику:',
+        error: '❌ Не удалось загрузить счета',
       },
     },
 
     accounts: {
-      no_accounts: '📊 У вас пока нет счетов.\n\nСоздайте первый счёт, чтобы начать учёт финансов.',
+      no_accounts: `📊 <b>Счетов пока нет</b>
+
+Создай первый счёт, чтобы начать учёт финансов.`,
+
       create_button: '➕ Создать счёт',
-      your_accounts: '📊 <b>Ваши счета:</b>\n\n',
+      your_accounts: '📊 <b>Твои счета:</b>\n\n',
       add_button: '➕ Добавить счёт',
-      manage_button: '📝 Управление счетами',
-      error_load: '❌ Не удалось загрузить счета. Попробуйте снова.',
-      create_step_name: 'Название счета',
-      create_step_name_prompt: 'Как вы хотите его назвать?\n(например, "Сбережения", "Кредитка", "Наличные")',
-      name_invalid: 'Введите корректное имя счёта (не более 50 символов).',
-      create_step_balance: 'Начальный баланс',
-      create_step_balance_prompt: (name: string, currency: string) => `Отлично! Какой текущий баланс у ${name}?\n(Введите число в ${currency}, либо 0, если начинаете с нуля)`,
-      balance_invalid: 'Введите корректное число (0 или больше).',
-      error_generic: 'Что-то пошло не так. Попробуйте снова с /accounts',
-      created_success: (name: string, balance: string) => `✅ Счёт создан!\n\n📊 ${name}\n💰 Баланс: ${balance}\n\nИспользуйте /accounts, чтобы управлять счетами.\n\n💡 Теперь можете добавить транзакцию, например: "Кофе 5000"`,
-      error_create: '❌ Не удалось создать счёт. Попробуйте снова.',
-      manage_prompt: 'Выберите счёт для управления:',
-      not_found: '❌ Счёт не найден.',
-      is_default: '⭐️ Счёт по умолчанию',
+      manage_button: '📝 Управление',
+      error_load: '❌ Не удалось загрузить счета',
+
+      create_step_name: '📝 <b>Название счёта</b>',
+      create_step_name_prompt: 'Как его назовём?\n\n<b>Примеры:</b> Сбережения, Кредитка, Наличные',
+      name_invalid: '❌ Введи корректное имя (до 50 символов)',
+
+      create_step_balance: '💰 <b>Начальный баланс</b>',
+      create_step_balance_prompt: (name: string, currency: string) =>
+        `Отлично! Сколько сейчас на <b>${name}</b>?\n\nВведи число в ${currency} (или 0)`,
+      balance_invalid: '❌ Введи корректное число (0 или больше)',
+
+      error_generic: '❌ Что-то пошло не так. Попробуй /accounts заново',
+
+      created_success: (name: string, balance: string) =>
+        `✅ <b>Счёт создан!</b>
+
+📊 ${name}
+💰 Баланс: <b>${balance}</b>
+
+💡 Теперь можешь добавить транзакцию:
+<code>Кофе 5000</code>`,
+
+      error_create: '❌ Не удалось создать счёт',
+      manage_prompt: '📝 <b>Управление счетами</b>\n\nВыбери счёт:',
+      not_found: '❌ Счёт не найден',
+
+      is_default: '⭐️ Основной',
       make_default: '⭐️ Сделать основным',
       delete: '🗑 Удалить счёт',
-      error_details: '❌ Не удалось загрузить детали счёта.',
-      setting_default: 'Устанавливаю по умолчанию...',
-      set_default_success: (name: string) => `✅ ${name} теперь счёт по умолчанию!`,
-      back_to_accounts: '« Назад к счетам',
+
+      error_details: '❌ Не удалось загрузить счёт',
+      setting_default: '⏳ Устанавливаю...',
+      set_default_success: (name: string) => `✅ <b>${name}</b> теперь основной счёт!`,
+      back_to_accounts: '◀️ К счетам',
       error_update: '❌ Не удалось обновить счёт',
-      delete_confirm_prompt: '⚠️ Вы уверены, что хотите удалить этот счёт?\nВсе связанные транзакции тоже будут удалены. Это действие необратимо!',
+
+      delete_confirm_prompt: `⚠️ <b>Удалить счёт?</b>
+
+Все связанные транзакции тоже будут удалены.
+Это действие необратимо!`,
+
       delete_confirm_yes: '✅ Да, удалить',
-      deleting: 'Удаляю...',
-      delete_success: '✅ Счёт успешно удалён.',
+      deleting: '⏳ Удаляю...',
+      delete_success: '✅ Счёт удалён',
       error_delete: '❌ Не удалось удалить счёт',
     },
 
     history: {
-      no_transactions: '📜 Пока нет ни одной транзакции.\n\nДобавьте первую, отправив сообщение вроде:\n"Кофе 5000"',
-      error_load: '❌ Не удалось загрузить историю транзакций. Попробуйте снова.',
-      title: '📊 История транзакций',
+      no_transactions: `📜 <b>История пуста</b>
+
+Добавь первую транзакцию:
+<code>Кофе 5000</code>`,
+
+      error_load: '❌ Не удалось загрузить историю',
+      title: '📜 <b>История транзакций</b>',
+
       summary_month: 'Итоги за месяц',
       income: '➕ Доход',
-      expense: '➖ Расходы',
+      expense: '➖ Расход',
+
       page_info: (current: number, total: number) => `Страница ${current} из ${total}`,
+
       today: 'Сегодня',
       yesterday: 'Вчера',
       other: 'Прочее',
       account: 'Счёт',
-      hint: 'Используйте кнопки ниже, чтобы листать историю.',
-      outdated: 'История устарела. Используйте /history',
-      not_found: 'Транзакция не найдена',
+
+      hint: '💡 Листай историю кнопками ниже',
+      outdated: '⚠️ История устарела. Используй /history',
+      not_found: '❌ Транзакция не найдена',
       unknown: 'Неизвестно',
-      details_title: (num: string) => `🔍 Детали транзакции #${num}`,
+
+      details_title: (num: string) => `🔍 <b>Транзакция #${num}</b>`,
       type: 'Тип',
       amount: 'Сумма',
       category: 'Категория',
       date: 'Дата',
       note: 'Комментарий',
-      back_to_history: '« Назад к истории',
+
+      back_to_history: '◀️ К истории',
     },
 
     currency: {
@@ -242,143 +298,164 @@ export const messages = {
     },
 
     validation: {
-      account_name_length: 'Название счёта должно быть от 1 до 50 символов.',
-      invalid_balance: 'Введите корректное число (0 или больше).',
+      account_name_length: 'Название должно быть от 1 до 50 символов',
+      invalid_balance: 'Введи корректное число (0 или больше)',
     },
 
     transaction: {
-      loading: '🤖 Анализирую',
-      new_deposit: 'Новая операция: Доход',
-      new_expense: 'Новая операция: Расход',
+      loading: '🤖 Анализирую...',
+      new_deposit: '💰 <b>Новый доход</b>',
+      new_expense: '💸 <b>Новый расход</b>',
+
       amount: 'Сумма',
       category: 'Категория',
       account: 'Счёт',
       note: 'Комментарий',
       date: 'Дата',
-      confidence_warning: '⚠️ Я не уверен в распознавании. Пожалуйста, проверьте данные.',
-      save_error: '❌ Не удалось сохранить транзакцию.',
-      outdated: '❌ Данные транзакции устарели. Попробуйте снова.',
-      account_not_found: '❌ Счёт не найден.',
-      category_not_found: '❌ Категория не найдена.',
-      saved: 'Транзакция сохранена!',
-      canceled: 'Транзакция отменена!',
+
+      confidence_warning: '⚠️ Не уверен в распознавании. Проверь данные!',
+      save_error: '❌ Не удалось сохранить транзакцию',
+      outdated: '⚠️ Данные устарели. Попробуй заново',
+      account_not_found: '❌ Счёт не найден',
+      category_not_found: '❌ Категория не найдена',
+
+      saved: '✅ Транзакция сохранена!',
+      canceled: '❌ Транзакция отменена',
+
       account_balance: 'Баланс',
-      category_updated: 'Категория обновлена',
-      account_updated: 'Счёт обновлён',
-      amount_updated: 'Сумма обновлена',
-      invalid_amount: 'Введите корректное положительное число.',
-      choose_category: '📁 Выберите категорию:',
-      choose_account: '📊 Выберите счёт:',
-      no_accounts_found: `
-❌ Счета не найдены.
+      category_updated: '✅ Категория обновлена',
+      account_updated: '✅ Счёт обновлён',
+      amount_updated: '✅ Сумма обновлена',
 
-Вам нужен хотя бы один счет, чтоб пользоваться ботом.
+      invalid_amount: '❌ Введи положительное число',
 
-Вы можете создать счет, используя /start и перейдя в раздел "Счета".`,
-      parse_error: `
-Сложно определить детали транзакции. Попробуйте, например:
+      choose_category: '📁 <b>Выбери категорию:</b>',
+      choose_account: '📊 <b>Выбери счёт:</b>',
 
-• Кофе 5000
-• Обед 25000
-• Получил зарплату 5000000
-`
+      no_accounts_found: `❌ <b>Нет счетов</b>
+
+Создай хотя бы один счёт через /start в разделе «Счета».`,
+
+      parse_error: `🤔 <b>Не понял</b>
+
+Попробуй так:
+• <code>Кофе 5000</code>
+• <code>Обед 25000</code>
+• <code>Зарплата 5000000</code>`
     },
 
     confirmation: {
       edit: '✏️ Изменить',
-      edit_more: '✏️ Изменить ещё',
+      edit_more: '✏️ Ещё',
       confirm: '✅ Сохранить',
       cancel: '❌ Отменить',
     },
 
     errors: {
-      retry_hint: 'Попробуйте ещё раз или начните заново с /start, чтобы обновить данные.',
-      critical: '❌ Произошла критическая ошибка. Пожалуйста, напишите @AsaHero для поддержки.',
+      retry_hint: '💡 Попробуй ещё раз или используй /start для обновления',
+      critical: '❌ Критическая ошибка. Напиши @AsaHero для поддержки.',
     },
   },
 
   uz: {
     onboarding: {
-      language_prompt: 'Выберите язык / Tilni tanlang',
+      language_prompt: '🌍 Tilni tanlang / Выберите язык',
 
-      problem: `Siz pul ishlaysiz va sarflaysiz —
-lekin oy oxirida qayerga ketganini tushunmaysiz.
+      problem: `💸 <b>Tanish vaziyat?</b>
 
-Cheklar yo'qoladi, eslatmalar unutiladi,
-jadvallar — noqulay.`,
+Pul tugaydi — lekin qayerga ketganini bilmaysiz.
+Cheklar yo'qoladi, eslatmalar unutiladi, jadvallar noqulay.`,
 
-      benefits: `Men sizga ko'rishga yordam beraman:
-– qancha sarflayotganingizni
-– eng ko'p nimaga ketishini
-– qancha qolishini
+      benefits: `✨ <b>Men sizga ko'rsataman:</b>
 
-Jadvalsiz. Qo'lda hisoblashsiz.
+💰 Qancha sarflayotganingizni
+📊 Qayerga ko'p ketayotganini
+✅ Qancha qolayotganini
 
-Ko'pchilik 7 kundan keyin hisobni tashlaydi.
-Shuning uchun biz uni bitta xabar qildik.`,
+<i>Jadvalsiz. Qo'lda hisoblashsiz.</i>
 
-      first_expense: `Har qanday xarajatni oddiy matn sifatida yozing.
-Masalan:
+⏱ Ko'pchilik 7 kundan keyin tashlaydi.
+Shuning uchun bitta xabar bilan qildik.`,
+
+      first_expense: `📝 <b>Hoziroq sinab ko'ring</b>
+
+Oddiy matn bilan xarajatni yozing:
 
 <code>Kofe 18 000</code>
-<code>Taksi 25k</code>
+<code>Taksi 25 ming</code>
 
-Xato qilishdan qo'rqmang — men ko'rsataman.`,
+Xato qilishdan qo'rqmang — yordam beraman! 😊`,
 
-      advanced: `Aytganday, aniqroq bo'lishi mumkin 👇
+      advanced: `💡 <b>Aniqroq bo'lishi mumkin:</b>
 
-– sanani ko'rsating: <i>kecha</i>, <i>10-may</i>
-– hisobni ko'rsating: <i>naqd</i>, <i>karta</i>
-– izoh qo'shing
+📅 Sana: <i>kecha</i>, <i>10-may</i>
+💳 Hisob: <i>naqd</i>, <i>karta</i>
+📝 Izoh qo'shish
 
-Misol:
+<b>Misol:</b>
 <code>Taksi 25 000 kecha kartadan</code>`,
 
-      account_concept: `Sizda turli pul manbalari bo'lishi mumkin:
-💵 Hamyonda naqd pul
+      account_concept: `💼 <b>«Hisoblar» nima?</b>
+
+Pulning turli manbalari bo'lishi mumkin:
+
+💵 Hamyondagi naqd pul
 💳 Bank kartasi
 🏦 Jamg'arma hisobi
 💰 Elektron hamyon
 
-Biz ularni «hisoblar» deb ataymiz.
-Bu qayerda qancha turganini ko'rishga yordam beradi.`,
+Bularni «hisoblar» deb ataymiz — qayerda qancha borligini ko'rasiz.`,
 
-      currency_prompt: 'Avval valyutani tanlang:',
+      currency_prompt: '💱 <b>Valyutani tanlang:</b>',
 
-      account_name: `Birinchi hisobingizni qanday nomlaymiz?
+      account_name: `📊 <b>Hisob nomi</b>
 
-Misollar:
+Birinchi hisobingizni qanday nomlaymiz?
+
+<b>Misollar:</b>
 • Naqd pul
 • Asosiy karta
 • Humo
 • Hamyon`,
 
-      balance_prompt: `Ushbu hisobda hozir qancha balans bor?
+      balance_prompt: `💰 <b>Joriy balans</b>
 
-Raqamni kiriting (yoki 0, agar noldan boshlasangiz).`,
+Hozir bu hisobda qancha pul bor?
 
-      timezone_prompt: `Yaxshiroq sozlash uchun vaqt mintaqasini tanlang.
+Raqam kiriting (yoki 0, agar noldan boshlasangiz).`,
 
-Shahar nomini yozing yoki joylashuvni yuboring 📍`,
+      timezone_prompt: `🕐 <b>Vaqt mintaqasi</b>
+
+Yaxshiroq sozlash uchun vaqt mintaqasini tanlang.
+
+Shahar nomini yozing yoki geolokatsiya yuboring 📍`,
 
       completion: (accountName: string, balance: string, currency: string, timezone: string) =>
-        `✅ Hammasi tayyor!
-Sizning hisobingiz "${accountName}" yaratildi.
-Balans: ${balance} ${currency}
-Vaqt mintaqasi: ${timezone}
+        `✅ <b>Hammasi tayyor!</b>
 
-Endi siz xarajat va daromadlarni yozishingiz mumkin. Shunchaki menga yozing yoki ovozli xabar yuboring.`,
+📊 Hisob: <b>${accountName}</b>
+💰 Balans: <b>${balance} ${currency}</b>
+🕐 Vaqt mintaqasi: ${timezone}
+
+Endi shunchaki yozing yoki ovozli xabar yuboring! 🎤`,
+
       errors: {
-        parse_expense: '🤔 Yana urinib ko\'ring. Masalan: "Kofe 5000"',
-        city_not_found: "🤔 Shahar topilmadi. Yana urinib ko'ring yoki tugmalardan tanlang.",
-        account_creation: "❌ Hisob yaratib bo'lmadi. /start ni qaytadan bosing.",
+        parse_expense: `🤔 Buni sinab ko'ring: <code>Kofe 5000</code>`,
+        city_not_found: '🤔 Shahar topilmadi. Boshqasini yozing yoki tugmalardan tanlang.',
+        account_creation: '❌ Hisob yaratishda xatolik. /start ni qayta bosing.',
       },
+
       tutorial: {
         category_other: 'Boshqa',
         date_today: 'bugun',
         default_account: 'Asosiy hisob',
         confirmation_message: (amount: number, categoryName: string, accountName: string, date: string) =>
-          `Tushundim 👌\n\n💰 Xarajat: ${amount} so'm\n📁 Kategoriya: ${categoryName}\n📊 Hisob: ${accountName}\n📅 Sana: ${date}`,
+          `✅ <b>Tushundim!</b>
+
+💰 Xarajat: <b>${amount} so'm</b>
+📁 Kategoriya: ${categoryName}
+📊 Hisob: ${accountName}
+📅 Sana: ${date}`,
       },
     },
 
@@ -386,208 +463,256 @@ Endi siz xarajat va daromadlarni yozishingiz mumkin. Shunchaki menga yozing yoki
       russian: '🇷🇺 Русский',
       uzbek: "🇺🇿 O'zbekcha",
 
-      understood: 'Tushundim, bu men haqimda →',
-      lets_try: "Yaxshi, keling sinab ko'ramiz",
+      understood: 'Bu men haqimda 👉',
+      lets_try: `Sinab ko'raylik ✨`,
       save: '✅ Saqlash',
-      edit: "✏️ O'zgartirish",
-      got_it: 'Tushundim →',
-      lets_start: 'Tushundim, boshlaymiz →',
-      start_using: '🚀 Foydalanishni boshlash',
-
-      close: 'Yopish ❌',
-      back: 'Orqaga',
+      edit: '✏️ Tahrirlash',
+      got_it: 'Tushundim 👌',
+      lets_start: 'Boshlaymiz! 🚀',
+      start_using: '🚀 Ishlatishni boshlash',
+      close: '✖️ Yopish',
+      back: '◀️ Orqaga',
+      send_location: '📍 Mening lokatsiyam',
     },
 
     menu: {
       accounts: '📊 Hisoblar',
-      transaction: "➕ Qo'shish",
+      transaction: `➕ Qo\'shish`,
       history: '📜 Tarix',
       stats: '📈 Statistika',
       settings: '⚙️ Sozlamalar',
-      main_prompt: '🏠 Asosiy menyu\n\nQuyidagi menyudan harakatni tanlang:',
+      main_prompt: '🏠 <b>Asosiy menyu</b>',
       add_transaction_help: `➕ <b>Tranzaksiya qo'shish</b>
 
-Tranzaksiyani matn, ovoz yoki chek fotosi sifatida yuboring.
+Matn ✏️, ovoz 🎤 yoki chek rasmi 📸 yuboring
 
-📝 Misollar:
-• "Kofe 5000"
-• "Kechki ovqat 50000"
-• "Ish haqi 5000000"
-
-🎤 Ovozli xabar
-📸 Chek fotosi`,
+<b>📝 Misollar:</b>
+• Kofe 5000
+• Kechki ovqat 50000
+• Oylik 5000000`,
     },
 
     settings: {
-      title: '⚙️ Sozlamalar',
+      title: '⚙️ <b>Sozlamalar</b>',
       current_currency: '💱 Joriy valyuta',
       default_account: '📊 Asosiy hisob',
-      not_set: "O'rnatilmagan",
-      change_currency: "💱 Valyutani o'zgartirish",
-      change_default_account: "📊 Asosiy hisobni o'zgartirish",
-      back_to_menu: '« Menyuga qaytish',
-      back_to_settings: '« Sozlamalarga qaytish',
-      choose_currency: '💱 <b>Valyutani tanlash</b>\n\nHisoblaringiz uchun valyutani tanlang:',
-      currency_changed: (currency: string) => `✅ Valyuta muvaffaqiyatli <b>${currency}</b> ga o'zgartirildi\n\n⚠️ Eslatma: Mavjud hisoblar o'z valyutasini saqlab qoladi.`,
-      currency_change_error: "❌ Valyutani o'zgartirib bo'lmadi. Keyinroq urinib ko'ring.",
-      no_accounts: "❌ Sizda hisoblar yo'q. Avval hisob yarating.",
-      choose_account: '📊 <b>Asosiy hisobni tanlash</b>\n\nHisobni tanlang:',
-      account_changed: "✅ Asosiy hisob muvaffaqiyatli o'zgartirildi!",
-      account_change_error: "❌ Asosiy hisobni o'zgartirib bo'lmadi.",
+      not_set: `O'rnatilmagan`,
+      change_currency: `💱 Valyutani o'zgartirish`,
+      change_default_account: '📊 Asosiy hisob',
+      back_to_menu: '◀️ Menyuga',
+      back_to_settings: '◀️ Sozlamalarga',
+      choose_currency: '💱 <b>Valyutani tanlash</b>\n\nYangi hisoblar uchun valyutani tanlang:',
+      currency_changed: (currency: string) =>
+        `✅ Valyuta <b>${currency}</b> ga o'zgartirildi\n\n💡 Mavjud hisoblar valyutasi saqlanadi.`,
+      currency_change_error: `❌ Valyutani o'zgartirib bo'lmadi`,
+      no_accounts: `❌ Hisoblar yo'q. /start orqali yarating`,
+      choose_account: '📊 <b>Asosiy hisob</b>\n\nAsosiy hisobni tanlang:',
+      account_changed: `✅ Asosiy hisob o'zgartirildi`,
+      account_change_error: `❌ Hisobni o'zgartirib bo'lmadi`,
     },
 
     start: {
-      error: "❌ Boshlab bo'lmadi. Qaytadan urinib ko'ring.",
+      error: `❌ Nimadir xato ketdi. Qayta urinib ko'ring.`,
     },
 
     stats: {
-      title: '📊 Statistika',
-      no_transactions: "📊 Ushbu davr uchun statistika ko'rsatishga tranzaksiyalar yo'q.\n\nBir nechta tranzaksiya qo'shing yoki boshqa davrni tanlang.",
-      expenses_by_category: '💸 Kategoriyalar bo\'yicha xarajatlar',
-      income_by_category: '💰 Kategoriyalar bo\'yicha daromadlar',
+      title: '📈 <b>Statistika</b>',
+      no_transactions: `📊 <b>Hali bo'sh</b>
+
+Bir nechta tranzaksiya qo'shing yoki boshqa davr tanlang.`,
+
+      expenses_by_category: `💸 <b>Xarajatlar (kategoriya bo'yicha)</b>`,
+      income_by_category: `💰 <b>Daromadlar (kategoriya bo'yicha)</b>`,
       other: 'Boshqa',
       total_expenses: '💸 Jami xarajatlar',
       total_income: '💰 Jami daromadlar',
       balance: '📊 Balans',
       expenses_title: '💸 Xarajatlar',
       income_title: '💰 Daromadlar',
-      error: "❌ Statistikani olib bo'lmadi. Keyinroq urinib ko'ring.",
+      error: `❌ Statistikani yuklab bo'lmadi`,
+
       periods: {
         month: 'Oy',
         week: 'Hafta',
         day: 'Kun',
         all: '🗓️ Barcha vaqt',
       },
-      change_account: "🔄 Hisobni o'zgartirish",
-      back_to_menu: '« Menyuga qaytish',
+
+      change_account: '🔄 Hisobni almashtirish',
+      back_to_menu: '◀️ Menyuga',
+
       months: [
         'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
-        'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'
+        'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
       ],
+
       selection: {
-        no_accounts: "❌ Sizda hali hisoblar yo'q. Birinchisini yaratish uchun /start dan foydalaning.",
+        no_accounts: `❌ Hisoblar yo'q. /start orqali yarating`,
         overall: '📊 Umumiy statistika',
-        message: "<b>📊 Statistika</b>\n\nStatistikani ko'rish uchun hisobni tanlang yoki barcha hisoblar bo'yicha umumiy statistikani ko'ring:",
-        error: "❌ Hisoblar ro'yxatini yuklab bo'lmadi. Keyinroq urinib ko'ring.",
+        message: `📈 <b>Statistika</b>\n\nHisobni tanlang yoki umumiy statistikani ko'ring:`,
+        error: `❌ Hisoblarni yuklab bo'lmadi`,
       },
     },
 
     accounts: {
-      no_accounts: "📊 Sizda hali hisoblar yo'q.\n\nMoliyaviy hisobni boshlash uchun birinchi hisobni yarating.",
-      create_button: "➕ Hisob yaratish",
-      your_accounts: "📊 <b>Sizning hisoblaringiz:</b>\n\n",
-      add_button: "➕ Hisob qo'shish",
-      manage_button: "📝 Hisoblarni boshqarish",
-      error_load: "❌ Hisoblarni yuklab bo'lmadi. Qaytadan urinib ko'ring.",
-      create_step_name: "Hisob nomi",
-      create_step_name_prompt: "Uni qanday nomlamoqchisiz?\n(masalan, \"Jamg'arma\", \"Kredit karta\", \"Naqd pul\")",
-      name_invalid: "To'g'ri hisob nomini kiriting (50 belgidan oshmasin).",
-      create_step_balance: "Boshlang'ich balans",
-      create_step_balance_prompt: (name: string, currency: string) => `Ajoyib! ${name} da hozirgi balans qancha?\n(${currency} da raqam kiriting, yoki noldan boshlasangiz 0)`,
-      balance_invalid: "To'g'ri raqam kiriting (0 yoki ko'proq).",
-      error_generic: "Nimadir xato ketdi. /accounts bilan qaytadan urinib ko'ring",
-      created_success: (name: string, balance: string) => `✅ Hisob yaratildi!\n\n📊 ${name}\n💰 Balans: ${balance}\n\nHisoblarni boshqarish uchun /accounts dan foydalaning.\n\n💡 Endi tranzaksiya qo'shishingiz mumkin, masalan: "Kofe 5000"`,
-      error_create: "❌ Hisob yaratib bo'lmadi. Qaytadan urinib ko'ring.",
-      manage_prompt: "Boshqarish uchun hisobni tanlang:",
-      not_found: "❌ Hisob topilmadi.",
-      is_default: "⭐️ Asosiy hisob",
-      make_default: "⭐️ Asosiy qilish",
-      delete: "🗑 Hisobni o'chirish",
-      error_details: "❌ Hisob tafsilotlarini yuklab bo'lmadi.",
-      setting_default: "Asosiy qilib belgilanmoqda...",
-      set_default_success: (name: string) => `✅ ${name} endi asosiy hisob!`,
-      back_to_accounts: "« Hisoblarga qaytish",
-      error_update: "❌ Hisobni yangilab bo'lmadi",
-      delete_confirm_prompt: "⚠️ Ushbu hisobni o'chirishga ishonchingiz komilmi?\nBarcha bog'liq tranzaksiyalar ham o'chiriladi. Bu amalni ortga qaytarib bo'lmaydi!",
-      delete_confirm_yes: "✅ Ha, o'chirish",
-      deleting: "O'chirilmoqda...",
-      delete_success: "✅ Hisob muvaffaqiyatli o'chirildi.",
-      error_delete: "❌ Hisobni o'chirib bo'lmadi",
+      no_accounts: `📊 <b>Hisoblar hali yo'q</b>
+
+Birinchi hisobni yarating va hisobni boshlang.`,
+
+      create_button: `➕ Hisob yaratish`,
+      your_accounts: `📊 <b>Sizning hisoblaringiz:</b>\n\n`,
+      add_button: `➕ Hisob qo'shish`,
+      manage_button: `📝 Boshqarish`,
+      error_load: `❌ Hisoblarni yuklab bo'lmadi`,
+
+      create_step_name: `📝 <b>Hisob nomi</b>`,
+      create_step_name_prompt: `Qanday nomlaymiz?\n\n<b>Misollar:</b> Jamg'arma, Kredit karta, Naqd`,
+      name_invalid: `❌ To'g'ri nom kiriting (50 belgigacha)`,
+
+      create_step_balance: `💰 <b>Boshlang'ich balans</b>`,
+      create_step_balance_prompt: (name: string, currency: string) =>
+        `Zo'r! <b>${name}</b> da hozir qancha bor?\n\n${currency} da raqam kiriting (yoki 0)`,
+      balance_invalid: `❌ To'g'ri raqam kiriting (0 yoki ko'proq)`,
+
+      error_generic: '❌ Nimadir xato ketdi. /accounts ni qayta bosing',
+
+      created_success: (name: string, balance: string) =>
+        `✅ <b>Hisob yaratildi!</b>
+
+📊 ${name}
+💰 Balans: <b>${balance}</b>
+
+💡 Endi tranzaksiya qo'shishingiz mumkin:
+<code>Kofe 5000</code>`,
+
+      error_create: `❌ Hisob yaratib bo'lmadi`,
+      manage_prompt: `📝 <b>Hisoblarni boshqarish</b>\n\nHisobni tanlang:`,
+      not_found: `❌ Hisob topilmadi`,
+
+      is_default: '⭐️ Asosiy',
+      make_default: '⭐️ Asosiy qilish',
+      delete: `🗑 Hisobni o'chirish`,
+
+      error_details: `❌ Hisobni yuklab bo'lmadi`,
+      setting_default: `⏳ O'rnatyapman...`,
+      set_default_success: (name: string) => `✅ <b>${name}</b> endi asosiy hisob!`,
+      back_to_accounts: '◀️ Hisoblarga',
+      error_update: `❌ Hisobni yangilab bo'lmadi`,
+
+      delete_confirm_prompt: `⚠️ <b>Hisobni o'chirish?</b>
+
+Barcha bog'liq tranzaksiyalar ham o'chiriladi.
+Bu harakat qaytarib bo'lmaydi!`,
+
+      delete_confirm_yes: `✅ Ha, o'chirish`,
+      deleting: `⏳ O'chiryapman...`,
+      delete_success: `✅ Hisob o'chirildi`,
+      error_delete: `❌ Hisobni o'chirib bo'lmadi`,
     },
 
     history: {
-      no_transactions: "📜 Hali hech qanday tranzaksiya yo'q.\n\nBirinchisini qo'shish uchun shunday xabar yuboring:\n\"Kofe 5000\"",
-      error_load: "❌ Tranzaksiya tarixini yuklab bo'lmadi. Qaytadan urinib ko'ring.",
-      title: "📊 Tranzaksiyalar tarixi",
-      summary_month: "Oy yakunlari",
-      income: "➕ Daromad",
-      expense: "➖ Xarajat",
-      page_info: (current: number, total: number) => `${total} dan ${current}-sahifa`,
-      today: "Bugun",
-      yesterday: "Kecha",
-      other: "Boshqa",
-      account: "Hisob",
-      hint: "Tarixni varaqlash uchun quyidagi tugmalardan foydalaning.",
-      outdated: "Tarix eskirgan. /history dan foydalaning",
-      not_found: "Tranzaksiya topilmadi",
-      unknown: "Noma'lum",
-      details_title: (num: string) => `🔍 Tranzaksiya tafsilotlari #${num}`,
-      type: "Tur",
-      amount: "Summa",
-      category: "Kategoriya",
-      date: "Sana",
-      note: "Izoh",
-      back_to_history: "« Tarixga qaytish",
+      no_transactions: `📜 <b>Tarix bo'sh</b>
+
+Birinchi tranzaksiyani qo'shing:
+<code>Kofe 5000</code>`,
+
+      error_load: `❌ Tarixni yuklab bo'lmadi`,
+      title: '📜 <b>Tranzaksiyalar tarixi</b>',
+
+      summary_month: 'Oy yakunlari',
+      income: '➕ Daromad',
+      expense: '➖ Xarajat',
+
+      page_info: (current: number, total: number) => `${current}-sahifa (${total} ta)`,
+
+      today: 'Bugun',
+      yesterday: 'Kecha',
+      other: 'Boshqa',
+      account: 'Hisob',
+
+      hint: '💡 Tugmalar bilan sahifalarni almashtiring',
+      outdated: '⚠️ Tarix eskirgan. /history ni ishlating',
+      not_found: '❌ Tranzaksiya topilmadi',
+      unknown: `Noma'lum`,
+
+      details_title: (num: string) => `🔍 <b>Tranzaksiya #${num}</b>`,
+      type: 'Turi',
+      amount: 'Miqdor',
+      category: 'Kategoriya',
+      date: 'Sana',
+      note: 'Izoh',
+
+      back_to_history: '◀️ Tarixga',
     },
 
     currency: {
-      UZS: "so'm",
+      UZS: `so'm`,
       USD: 'dollar',
       EUR: 'yevro',
       RUB: 'rubl',
     },
 
     validation: {
-      account_name_length: "Hisob nomi 1 dan 50 belgigacha bo'lishi kerak.",
-      invalid_balance: "To'g'ri raqam kiriting (0 yoki ko'proq).",
+      account_name_length: `Nom 1 dan 50 belgigacha bo'lishi kerak`,
+      invalid_balance: `To'g'ri raqam kiriting (0 yoki ko'proq)`,
     },
 
     transaction: {
-      loading: '🤖 Tahlil qilyapman',
-      new_deposit: 'Yangi operatsiya: Daromad',
-      new_expense: 'Yangi operatsiya: Xarajat',
-      amount: 'Summa',
+      loading: '🤖 Tahlil qilyapman...',
+      new_deposit: '💰 <b>Yangi daromad</b>',
+      new_expense: '💸 <b>Yangi xarajat</b>',
+
+      amount: 'Miqdor',
       category: 'Kategoriya',
       account: 'Hisob',
       note: 'Izoh',
       date: 'Sana',
-      confidence_warning: "⚠️ Men aniqlashga ishonchim komil emas. Iltimos, ma'lumotlarni tekshiring.",
-      save_error: "❌ Tranzaksiyani saqlab bo'lmadi.",
-      outdated: "❌ Tranzaksiya ma'lumotlari eskirgan. Qaytadan urinib ko'ring.",
-      account_not_found: '❌ Hisob topilmadi.',
-      category_not_found: '❌ Kategoriya topilmadi.',
-      saved: 'Tranzaksiyani saqlandi',
+
+      confidence_warning: `⚠️ Aniq emasman. Ma'lumotni tekshiring!`,
+      save_error: `❌ Tranzaksiyani saqlab bo'lmadi`,
+      outdated:   `⚠️ Ma'lumot eskirgan. Qayta urinib ko'ring`,
+      account_not_found: `❌ Hisob topilmadi`,
+      category_not_found: `❌ Kategoriya topilmadi`,
+
+      saved: `✅ Tranzaksiya saqlandi!`,
+      canceled: `❌ Tranzaksiya bekor qilindi`,
+
       account_balance: 'Balans',
-      category_updated: 'Kategoriya yangilandi',
-      account_updated: 'Hisob yangilandi',
-      amount_updated: 'Summa yangilandi',
-      invalid_amount: "To'g'ri musbat son kiriting.",
-      choose_category: '📁 Kategoriyani tanlang:',
-      choose_account: '📊 Hisobni tanlang:',
-      no_accounts_found: "❌ Hisoblar topilmadi. Qaytadan urinib ko'ring.",
-      parse_error: `
-Tranzaksiya tafsilotlarini aniqlash qiyin. Masalan, quyidagicha bo'lishi kerak:
+      category_updated: '✅ Kategoriya yangilandi',
+      account_updated: '✅ Hisob yangilandi',
+      amount_updated: '✅ Miqdor yangilandi',
 
-• Kofe 5000
-• Tushlik 25000
-• Oylik oldim 5000000
-`
+      invalid_amount: '❌ Musbat raqam kiriting',
 
+      choose_category: '📁 <b>Kategoriyani tanlang:</b>',
+      choose_account: '📊 <b>Hisobni tanlang:</b>',
+
+      no_accounts_found: `❌ <b>Hisoblar yo'q</b>
+
+Kamida bitta hisob yarating: /start → «Hisoblar».`,
+
+      parse_error: `🤔 <b>Tushunmadim</b>
+
+Buni sinab ko'ring:
+• <code>Kofe 5000</code>
+• <code>Tushlik 25000</code>
+• <code>Oylik 5000000</code>`
     },
 
     confirmation: {
-      edit: "✏️ O'zgartirish",
-      edit_more: "✏️ Yana o'zgartirish",
-      confirm: '✅ Tasdiqlash',
+      edit: '✏️ Tahrirlash',
+      edit_more: '✏️ Yana',
+      confirm: '✅ Saqlash',
       cancel: '❌ Bekor qilish',
     },
 
     errors: {
-      retry_hint: "Qaytadan urinib ko'ring yoki ma'lumotlarni yangilash uchun /start ni bosing.",
-      critical: "❌ Kritik xato yuz berdi. Iltimos, yordam uchun @AsaHero ga yozing.",
+      retry_hint: `💡 Qayta urinib ko'ring yoki /start ni bosing`,
+      critical: `❌ Jiddiy xatolik. @AsaHero ga murojaat qiling.`,
     },
   },
-};
+}
+
 
 export function t(key: string, lang: Language, params?: any): string {
   const keys = key.split('.');

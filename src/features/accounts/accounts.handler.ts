@@ -27,9 +27,9 @@ export async function accountsHandler(ctx: BotContext | any) {
       ]);
 
       if (ctx.callbackQuery) {
-        await ctx.editMessageText(message, keyboard);
+        await ctx.editMessageText(message, { parse_mode: 'HTML', ...keyboard });
       } else {
-        await ctx.reply(message, { parse_mode: "HTML", ...keyboard});
+        await ctx.reply(message, { parse_mode: 'HTML', ...keyboard });
       }
       return;
     }
@@ -79,7 +79,7 @@ export async function addAccountCallback(ctx: any) {
     t('accounts.create_step_name_prompt', lang),
   );
 
-  await ctx.editMessageText(message);
+  await ctx.editMessageText(message, { parse_mode: 'HTML' });
 
   await stateManager.setState(ctx.from.id, 'WAIT_ACCOUNT_NAME', {
     stepInfo: { current: 1, total: 2, name: 'Название счета' },
@@ -112,7 +112,7 @@ export async function accountNameHandler(ctx: any, data: any) {
     t('accounts.create_step_balance_prompt', lang, [accountName, currencyCode]),
   );
 
-  await ctx.reply(message);
+  await ctx.reply(message, { parse_mode: 'HTML' });
 }
 
 // Handle account balance input
@@ -147,13 +147,10 @@ export async function accountBalanceHandler(ctx: any, data: any) {
 
     await ctx.reply(
       t('accounts.created_success', lang, [account.name, formatAmount(balance, currencyCode)]),
+      { parse_mode: 'HTML' },
     );
 
     await stateManager.clearState(tgUserId);
-
-    // Return to main menu
-    const { showMainMenu } = await import('../menu/menu.handler');
-    await showMainMenu(ctx);
   } catch (error: any) {
     console.error('Account creation error:', error);
     await ctx.reply(t('accounts.error_create', lang));
@@ -181,7 +178,7 @@ export async function manageAccountsCallback(ctx: any) {
 
     buttons.push([Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_back')]);
 
-    await ctx.editMessageText(t('accounts.manage_prompt', lang), Markup.inlineKeyboard(buttons));
+    await ctx.editMessageText(t('accounts.manage_prompt', lang), { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   } catch (error: any) {
     console.error('Manage accounts error:', error);
     await ctx.editMessageText(t('accounts.error_load', 'ru'));
@@ -204,7 +201,7 @@ export async function viewAccountCallback(ctx: any) {
     const currencyCode = user.currency_code || 'USD';
 
     if (!account) {
-      await ctx.editMessageText(t('accounts.not_found', lang));
+      await ctx.editMessageText(t('accounts.not_found', lang), { parse_mode: 'HTML' });
       return;
     }
 
@@ -216,7 +213,9 @@ export async function viewAccountCallback(ctx: any) {
     const buttons = [];
 
     if (!account.is_default) {
-      buttons.push([Markup.button.callback(t('accounts.make_default', lang), `acc_default_${accountId}`)]);
+      buttons.push([
+        Markup.button.callback(t('accounts.make_default', lang), `acc_default_${accountId}`),
+      ]);
     }
 
     if (accounts.length > 1) {
@@ -225,7 +224,7 @@ export async function viewAccountCallback(ctx: any) {
 
     buttons.push([Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_manage')]);
 
-    await ctx.editMessageText(message, Markup.inlineKeyboard(buttons));
+    await ctx.editMessageText(message, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   } catch (error: any) {
     console.error('View account error:', error);
     await ctx.editMessageText(t('accounts.error_details', 'ru'));
@@ -250,7 +249,9 @@ export async function setDefaultAccountCallback(ctx: any) {
 
     await ctx.editMessageText(
       t('accounts.set_default_success', lang, [account?.name || '']),
-      Markup.inlineKeyboard([[Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_back')]]),
+      { parse_mode: 'HTML', ...Markup.inlineKeyboard([
+        [Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_back')],
+      ]) },
     );
   } catch (error: any) {
     console.error('Set default error:', error);
@@ -269,12 +270,18 @@ export async function deleteAccountCallback(ctx: any) {
 
   await ctx.editMessageText(
     t('accounts.delete_confirm_prompt', lang),
-    Markup.inlineKeyboard([
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
       [
-        Markup.button.callback(t('accounts.delete_confirm_yes', lang), `acc_delete_confirm_${accountId}`),
+        Markup.button.callback(
+          t('accounts.delete_confirm_yes', lang),
+          `acc_delete_confirm_${accountId}`,
+        ),
         Markup.button.callback(t('confirmation.cancel', lang), `acc_view_${accountId}`),
       ],
     ]),
+    },
   );
 }
 
@@ -293,7 +300,12 @@ export async function confirmDeleteAccountCallback(ctx: any) {
 
     await ctx.editMessageText(
       t('accounts.delete_success', lang),
-      Markup.inlineKeyboard([[Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_back')]]),
+      {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_back')],
+        ]),
+      },
     );
   } catch (error: any) {
     console.error('Delete account error:', error);

@@ -8,6 +8,8 @@ import {
   escapeHtml,
   truncateLabel,
   formatCompactAmount,
+  convertToTimezone,
+  formatDateTime,
 } from '../../shared/utils/format';
 import { stateManager } from '../../core/state/state.manager';
 import { buildCloseButton } from '../menu/menu.handler';
@@ -32,13 +34,10 @@ export async function historyHandler(ctx: BotContext) {
       const user = await apiClient.getMe(ctx);
       const lang = (user.language_code as Language) || 'ru';
 
-      await ctx.reply(
-        t('history.no_transactions', lang),
-        {
-          parse_mode: 'HTML',
-          ...Markup.inlineKeyboard([[buildCloseButton(lang)]]),
-        },
-      );
+      await ctx.reply(t('history.no_transactions', lang), {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([[buildCloseButton(lang)]]),
+      });
       return;
     }
 
@@ -55,6 +54,8 @@ export async function historyHandler(ctx: BotContext) {
 
     const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
+    const lang = (user.language_code as Language) || 'ru';
+    const timezone = user.timezone;
 
     // Store transactions in state for navigation
     await stateManager.setState(tgUserId, 'VIEW_HISTORY', {
@@ -62,7 +63,16 @@ export async function historyHandler(ctx: BotContext) {
       currentPage: 0,
     });
 
-    await sendHistoryPage(ctx, result.items, 0, totalIncome, totalExpense, currencyCode);
+    await sendHistoryPage(
+      ctx,
+      result.items,
+      0,
+      totalIncome,
+      totalExpense,
+      currencyCode,
+      lang,
+      timezone,
+    );
   } catch (error: any) {
     console.error('History handler error:', error);
     await ctx.reply(t('history.error_load', 'ru'), {
@@ -78,6 +88,8 @@ async function sendHistoryPage(
   totalIncome: number,
   totalExpense: number,
   currencyCode: string,
+  lang: Language,
+  timezone?: string,
 ) {
   const startIdx = page * TRANSACTIONS_PER_PAGE;
   const endIdx = startIdx + TRANSACTIONS_PER_PAGE;
@@ -85,13 +97,13 @@ async function sendHistoryPage(
 
   const categories = await apiClient.getCategories(ctx);
   const accounts = await apiClient.getAccounts(ctx);
-  const user = await apiClient.getMe(ctx);
-  const lang = (user.language_code as Language) || 'ru';
+  const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
 
-  const now = new Date();
-  const monthFormatter = new Intl.DateTimeFormat('ru-RU', {
+  const now = convertToTimezone(new Date(), timezone);
+  const monthFormatter = new Intl.DateTimeFormat(locale, {
     month: 'long',
     year: 'numeric',
+    timeZone: 'UTC',
   });
   const monthTitle = monthFormatter.format(now);
   // Заголовок + сводка
@@ -109,7 +121,7 @@ async function sendHistoryPage(
   }
 
   // Группируем по дате
-  const grouped = groupByDate(pageTransactions, lang);
+  const grouped = groupByDate(pageTransactions, lang, timezone);
   let txNumber = startIdx + 1;
 
   for (const [dateKey, txs] of Object.entries(grouped)) {
@@ -208,27 +220,34 @@ function buildHistoryKeyboard(
   return Markup.inlineKeyboard(buttons);
 }
 
-function groupByDate(transactions: Transaction[], lang: Language = 'ru'): Record<string, Transaction[]> {
+function groupByDate(
+  transactions: Transaction[],
+  lang: Language = 'ru',
+  timezone?: string,
+): Record<string, Transaction[]> {
   const groups: Record<string, Transaction[]> = {};
-  const now = new Date();
+  const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
+  const now = convertToTimezone(new Date(), timezone);
+  const todayKey = now.toISOString().slice(0, 10);
+
+  const yesterday = new Date(now);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const yesterdayKey = yesterday.toISOString().slice(0, 10);
 
   transactions.forEach((tx) => {
-    const txDate = new Date(tx.created_at);
-    const isToday = txDate.toDateString() === now.toDateString();
-
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday = txDate.toDateString() === yesterday.toDateString();
+    const txDate = convertToTimezone(tx.created_at, timezone);
+    const txKey = txDate.toISOString().slice(0, 10);
 
     let key: string;
-    if (isToday) {
+    if (txKey === todayKey) {
       key = t('history.today', lang);
-    } else if (isYesterday) {
+    } else if (txKey === yesterdayKey) {
       key = t('history.yesterday', lang);
     } else {
-      key = txDate.toLocaleDateString(lang === 'uz' ? 'uz-UZ' : 'ru-RU', {
+      key = txDate.toLocaleDateString(locale, {
         month: 'short',
         day: 'numeric',
+        timeZone: 'UTC',
       });
     }
 
@@ -267,11 +286,22 @@ export async function historyPageCallback(ctx: any) {
 
   const user = await apiClient.getMe(ctx);
   const currencyCode = user.currency_code || 'USD';
+  const lang = (user.language_code as Language) || 'ru';
+  const timezone = user.timezone;
 
   // Update page in state
   await stateManager.updateData(userId, { currentPage: page });
 
-  await sendHistoryPage(ctx, data.transactions, page, totalIncome, totalExpense, currencyCode);
+  await sendHistoryPage(
+    ctx,
+    data.transactions,
+    page,
+    totalIncome,
+    totalExpense,
+    currencyCode,
+    lang,
+    timezone,
+  );
 }
 
 // View transaction details callback
@@ -300,6 +330,8 @@ export async function historyViewCallback(ctx: any) {
 
   const user = await apiClient.getMe(ctx);
   const lang = (user.language_code || 'ru') as Language;
+  const timezone = user.timezone;
+  const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
 
   const emoji = getTransactionEmoji(tx.type);
   const typeText = tx.type === 'deposit' ? t('history.income', lang) : t('history.expense', lang);
@@ -310,12 +342,16 @@ export async function historyViewCallback(ctx: any) {
 
   const num = String(txIndex + 1).padStart(2, '0');
 
-  const dateStr = new Date(tx.created_at).toLocaleString(lang === 'uz' ? 'uz-UZ' : 'ru-RU', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  const dateStr = formatDateTime(tx.created_at, {
+    timezone,
+    locale,
+    formatOptions: {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    },
   });
 
   const formattedAmount = formatAmount(tx.amount, tx.currency_code || 'USD');
@@ -338,7 +374,12 @@ export async function historyViewCallback(ctx: any) {
   await ctx.editMessageText(message, {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([
-      [Markup.button.callback(t('history.back_to_history', lang), `history_back_${data.currentPage || 0}`)],
+      [
+        Markup.button.callback(
+          t('history.back_to_history', lang),
+          `history_back_${data.currentPage || 0}`,
+        ),
+      ],
     ]),
   });
 }

@@ -6,7 +6,6 @@ import { t, Language } from '../../shared/utils/i18n';
 import {
   parseTimezoneFromCity,
   parseTimezoneFromCoordinates,
-  getCommonTimezones,
   formatTimezone,
 } from '../../shared/utils/geo';
 import { getCategoryEmoji } from '../../shared/utils/format';
@@ -18,15 +17,15 @@ import { getCategoryEmoji } from '../../shared/utils/format';
 export async function showLanguageSelection(ctx: BotContext) {
   const message = t('onboarding.language_prompt', 'ru'); // This message is bilingual
 
-  await ctx.reply(
-    message,
-    Markup.inlineKeyboard([
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
       [
         Markup.button.callback(t('buttons.russian', 'ru'), 'lang_ru'),
         Markup.button.callback(t('buttons.uzbek', 'uz'), 'lang_uz'),
       ],
     ]),
-  );
+  });
 
   await stateManager.setState(ctx.from.id, 'ONBOARDING_LANGUAGE', {
     onboardingScreen: 0,
@@ -62,10 +61,10 @@ async function showProblemStatement(ctx: any, lang: Language) {
   const message = t('onboarding.problem', lang);
   const button = t('buttons.understood', lang);
 
-  await ctx.reply(
-    message,
-    Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_understood')]]),
-  );
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_understood')]]),
+  });
 }
 
 /**
@@ -95,10 +94,10 @@ async function showBenefits(ctx: any, lang: Language) {
   const message = t('onboarding.benefits', lang);
   const button = t('buttons.lets_try', lang);
 
-  await ctx.reply(
-    message,
-    Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_lets_try')]]),
-  );
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_lets_try')]]),
+  });
 }
 
 /**
@@ -127,7 +126,7 @@ export async function onboardingLetsTryCallback(ctx: any) {
 async function showFirstExpensePrompt(ctx: any, lang: Language) {
   const message = t('onboarding.first_expense', lang);
 
-  await ctx.reply(message, { parse_mode: "HTML"}); // NO buttons - user must type
+  await ctx.reply(message, { parse_mode: 'HTML' }); // NO buttons - user must type
 }
 
 /**
@@ -181,12 +180,12 @@ async function showTutorialConfirmation(ctx: any, parsed: any, lang: Language) {
     date,
   ]);
 
-  await ctx.reply(
-    message,
-    Markup.inlineKeyboard([
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
       [Markup.button.callback(t('buttons.got_it', lang), 'onb_save_tutorial')],
     ]),
-  );
+  });
 }
 
 /**
@@ -217,11 +216,10 @@ async function showAdvancedFeatures(ctx: any, lang: Language) {
   const message = t('onboarding.advanced', lang);
   const button = t('buttons.got_it', lang);
 
-  await ctx.reply(message,
-    {
-      parse_mode: "HTML",
-      ...Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_got_it')]])
-    });
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_got_it')]]),
+  });
 }
 
 /**
@@ -251,10 +249,10 @@ async function showAccountConcept(ctx: any, lang: Language) {
   const message = t('onboarding.account_concept', lang);
   const button = t('buttons.lets_start', lang);
 
-  await ctx.reply(
-    message,
-    Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_start_account')]]),
-  );
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([[Markup.button.callback(button, 'onb_start_account')]]),
+  });
 }
 
 /**
@@ -283,9 +281,9 @@ export async function onboardingStartAccountCallback(ctx: any) {
 async function showCurrencySelection(ctx: any, lang: Language) {
   const message = t('onboarding.currency_prompt', lang);
 
-  await ctx.reply(
-    message,
-    Markup.inlineKeyboard([
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
       [
         Markup.button.callback(`🇺🇿 UZS (${t('currency.UZS', lang)})`, 'onb_curr_UZS'),
         Markup.button.callback(`🇺🇸 USD (${t('currency.USD', lang)})`, 'onb_curr_USD'),
@@ -295,7 +293,7 @@ async function showCurrencySelection(ctx: any, lang: Language) {
         Markup.button.callback(`🇷🇺 RUB (${t('currency.RUB', lang)})`, 'onb_curr_RUB'),
       ],
     ]),
-  );
+  });
 }
 
 /**
@@ -327,7 +325,9 @@ export async function currencySelectionCallback(ctx: any) {
  */
 async function showAccountNamePrompt(ctx: any, lang: Language) {
   const message = t('onboarding.account_name', lang);
-  await ctx.reply(message); // NO buttons - user must type
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+  }); // NO buttons - user must type
 }
 
 /**
@@ -358,7 +358,9 @@ export async function handleAccountNameInput(ctx: any, data: any) {
  */
 async function showBalancePrompt(ctx: any, lang: Language) {
   const message = t('onboarding.balance_prompt', lang);
-  await ctx.reply(message); // NO buttons - user must type
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+  }); // NO buttons - user must type
 }
 
 /**
@@ -390,39 +392,18 @@ export async function handleBalanceInput(ctx: any, data: any) {
  */
 async function showTimezoneSelection(ctx: any, lang: Language) {
   const message = t('onboarding.timezone_prompt', lang);
-  const timezones = getCommonTimezones();
 
-  await ctx.reply(
-    message,
-    Markup.inlineKeyboard(
-      timezones.map((tz) => [Markup.button.callback(tz.label, `onb_tz_${tz.offset}`)]),
-    ),
-  );
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.keyboard([[Markup.button.locationRequest(t('buttons.send_location', lang))]])
+      .resize()
+      .oneTime(),
+  });
 }
 
 /**
  * Handle timezone selection callback
  */
-export async function timezoneSelectionCallback(ctx: any) {
-  const timezone = ctx.match[1]; // e.g., 'UTC+5'
-  const userId = ctx.from.id;
-  const data = await stateManager.getData(userId);
-  const lang = (data.language || 'ru') as Language;
-
-  await ctx.answerCbQuery();
-  await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-
-  // Save timezone to user profile
-  await apiClient.updateMe(ctx, { timezone });
-
-  await stateManager.setState(userId, 'ONBOARDING_COMPLETE', {
-    ...data,
-    onboardingScreen: 11,
-  });
-
-  // Show Screen 11: Create account and complete
-  await completeOnboarding(ctx, data, lang, timezone);
-}
 
 /**
  * Handle timezone from city name (text input during ONBOARDING_TIMEZONE)
@@ -442,10 +423,18 @@ export async function handleTimezoneTextInput(ctx: any, data: any) {
   // Save timezone to user profile
   await apiClient.updateMe(ctx, { timezone: timezone.offset });
 
+  // Remove keyboard
+  const processingMsg = await ctx.reply(t('transaction.loading', lang), {
+    parse_mode: 'HTML',
+    ...Markup.removeKeyboard(),
+  });
+
   await stateManager.setState(userId, 'ONBOARDING_COMPLETE', {
     ...data,
     onboardingScreen: 11,
   });
+
+  await ctx.deleteMessage(processingMsg.message_id).catch(() => {});
 
   // Show Screen 11: Create account and complete
   await completeOnboarding(ctx, data, lang, timezone.offset);
@@ -464,10 +453,18 @@ export async function handleTimezoneGeolocation(ctx: any, data: any) {
   // Save timezone to user profile
   await apiClient.updateMe(ctx, { timezone: timezone.offset });
 
+  // Remove keyboard
+  const processingMsg = await ctx.reply(t('transaction.loading', lang), {
+    parse_mode: 'HTML',
+    ...Markup.removeKeyboard(),
+  });
+
   await stateManager.setState(userId, 'ONBOARDING_COMPLETE', {
     ...data,
     onboardingScreen: 11,
   });
+
+  await ctx.deleteMessage(processingMsg.message_id).catch(() => {});
 
   // Show Screen 11: Create account and complete
   await completeOnboarding(ctx, data, lang, timezone.offset);
@@ -496,38 +493,22 @@ async function completeOnboarding(ctx: any, data: any, lang: Language, timezone:
       timezone,
     ]);
 
-    await ctx.reply(
-      message,
-      Markup.inlineKeyboard([
-        [Markup.button.callback(t('buttons.start_using', lang), 'onb_complete')],
-      ]),
-    );
+    // Clear onboarding state immediately
+    await stateManager.clearState(userId);
 
-    // Don't clear state yet - wait for final button click
+    // Get Main Menu keyboard
+    const { buildReplyKeyboard } = await import('../menu/menu.handler');
+    const keyboard = buildReplyKeyboard(lang);
+
+    await ctx.reply(message, {
+      parse_mode: 'HTML',
+      ...keyboard,
+    });
   } catch (error: any) {
     console.error('Account creation error:', error);
     await ctx.reply(t('onboarding.errors.account_creation', lang));
     await stateManager.clearState(userId);
   }
-}
-
-/**
- * Handle final completion button - show main menu
- */
-export async function onboardingCompleteCallback(ctx: any) {
-  const userId = ctx.from.id;
-  const data = await stateManager.getData(userId);
-  const lang = (data.language || 'ru') as Language;
-
-  await ctx.answerCbQuery();
-  await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-
-  // Clear onboarding state
-  await stateManager.clearState(userId);
-
-  // Show main menu with ReplyKeyboard
-  const { showMainMenu } = await import('../menu/menu.handler');
-  await showMainMenu(ctx, lang, true);
 }
 
 // Register all state handlers

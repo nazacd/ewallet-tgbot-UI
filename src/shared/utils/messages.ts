@@ -1,7 +1,12 @@
 import { Markup } from 'telegraf';
 import { BotContext, ParsedTransaction } from '../../core/types';
-import { formatAmount, getCategoryEmoji, getTransactionEmoji } from './format';
+import { formatAmount, getCategoryEmoji, getTransactionEmoji, escapeHtml } from './format';
 import { t, Language } from './i18n';
+function formatFxRate(rate?: number) {
+  if (!rate || Number.isNaN(rate)) return '';
+  // keep simple but readable
+  return rate >= 1 ? rate.toFixed(4) : rate.toPrecision(6);
+}
 
 export function buildTransactionSummary({
   parsed,
@@ -18,26 +23,48 @@ export function buildTransactionSummary({
   accountName?: string;
   lang: Language;
 }): string {
-  const emoji = getTransactionEmoji(parsed.type);
   const categoryEmoji = categorySlug ? getCategoryEmoji(categorySlug) : '📌';
   const typeText =
     parsed.type === 'deposit'
       ? t('transaction.new_deposit', lang)
       : t('transaction.new_expense', lang);
 
-  let message = `${emoji} ${typeText}\n\n`;
-  message += `💰 <b>${t('transaction.amount', lang)}</b>: ${formatAmount(parsed.amount, currencyCode)}\n`;
+  // ✅ prefer parsed currency if it exists (this is the “final” currency shown/saved)
+  const finalCurrency = parsed.currency || currencyCode;
+
+  let message = `${typeText}\n\n`;
+
+  // ✅ Show final amount
+  message += `💰 <b>${t('transaction.amount', lang)}</b>: ${formatAmount(parsed.amount, finalCurrency)}\n`;
+
+  // ✅ If conversion exists, show original + rate
+  const hasFx =
+    parsed.original_amount !== undefined &&
+    !!parsed.original_currency &&
+    parsed.original_currency !== finalCurrency;
+
+  if (hasFx) {
+    message += `💱 <b>Original</b>: ${formatAmount(parsed.original_amount!, parsed.original_currency!)} ${parsed.original_currency}\n`;
+    if (parsed.fx_rate) {
+      message += `📈 <b>FX</b>: ${formatFxRate(parsed.fx_rate)} (${parsed.original_currency} → ${finalCurrency})\n`;
+    }
+  }
 
   if (categoryName) {
-    message += `${categoryEmoji} <b>${t('transaction.category', lang)}</b>: ${categoryName}\n`;
+    message += `${categoryEmoji} <b>${t('transaction.category', lang)}</b>: ${escapeHtml(categoryName)}\n`;
   }
 
   if (accountName) {
-    message += `📊 <b>${t('transaction.account', lang)}</b>: ${accountName}\n`;
+    message += `📊 <b>${t('transaction.account', lang)}</b>: ${escapeHtml(accountName)}\n`;
   }
 
   if (parsed.note) {
-    message += `📝 <b>${t('transaction.note', lang)}</b>: ${parsed.note}\n`;
+    // ✅ avoid HTML injection
+    message += `📝 <b>${t('transaction.note', lang)}</b>: ${escapeHtml(parsed.note)}\n`;
+  }
+
+  if (parsed.performed_at) {
+    message += `📅 <b>${t('transaction.date', lang)}</b>: ${escapeHtml(parsed.performed_at)}\n`;
   }
 
   if (parsed.confidence < 0.7) {

@@ -31,7 +31,7 @@ function calculateDateRange(
     const from = new Date(year, month, 1);
     const to = new Date(year, month + 1, 0); // Last day of month
 
-    const monthNames = (t('stats.months', lang) as unknown) as string[];
+    const monthNames = t('stats.months', lang) as unknown as string[];
     const displayRange = `${monthNames[month]} ${year}`;
 
     return {
@@ -387,20 +387,17 @@ function buildStatsKeyboard(
     ],
     [Markup.button.callback(t('stats.periods.all', lang), `s_pa_${compactAccountId}`)],
     [Markup.button.callback(t('stats.change_account', lang), 'stats_change_account')],
-    [Markup.button.callback(t('stats.back_to_menu', lang), 'stats_to_menu')],
+    [Markup.button.callback(t('buttons.close', lang), 'stats_close')],
   );
 
   return keyboard;
 }
 
-// Callback to return to menu from stats
-export async function statsToMenuCallback(ctx: any) {
+// Callback to close stats message
+export async function statsCloseCallback(ctx: any) {
   await ctx.answerCbQuery();
-  // Delete stats message (has image) and show menu
+  // Delete stats message
   await ctx.deleteMessage().catch(() => {});
-
-  const { showMainMenu } = await import('../menu/menu.handler');
-  await showMainMenu(ctx, false);
 }
 
 // Helper to expand compact account ID back to full UUID

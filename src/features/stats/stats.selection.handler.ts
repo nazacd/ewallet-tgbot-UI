@@ -24,7 +24,9 @@ export async function showStatsSelection(ctx: BotContext) {
     }
 
     // Build inline keyboard with account options
-    const buttons = [[Markup.button.callback(t('stats.selection.overall', lang), 'stats_select_overall')]];
+    const buttons = [
+      [Markup.button.callback(t('stats.selection.overall', lang), 'stats_select_overall')],
+    ];
 
     // Add button for each account
     accounts.forEach((account) => {
@@ -39,13 +41,10 @@ export async function showStatsSelection(ctx: BotContext) {
     // Add close button instead of back to menu
     buttons.push([buildCloseButton(lang)]);
 
-    await ctx.reply(
-      t('stats.selection.message', lang),
-      {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard(buttons),
-      },
-    );
+    await ctx.reply(t('stats.selection.message', lang), {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard(buttons),
+    });
   } catch (error) {
     console.error('Error showing stats selection:', error);
     await ctx.reply(t('stats.selection.error', 'ru'));

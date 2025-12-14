@@ -41,7 +41,7 @@ import { voiceHandler } from '../features/transactions/voice.handler';
 import { photoHandler } from '../features/transactions/photo.handler';
 import {
   statsHandler,
-  statsToMenuCallback,
+  statsCloseCallback,
   statsPeriodMonthCallback,
   statsPeriodWeekCallback,
   statsPeriodDayCallback,
@@ -62,6 +62,8 @@ import {
   settingsSetCurrencyCallback,
   settingsDefaultAccountCallback,
   settingsSetDefaultAccountCallback,
+  backToSettingsCallback,
+  settingsCloseCallback,
 } from '../features/settings/settings.handler';
 
 // New onboarding handlers
@@ -73,8 +75,6 @@ import {
   onboardingGotItCallback,
   onboardingStartAccountCallback,
   currencySelectionCallback,
-  timezoneSelectionCallback,
-  onboardingCompleteCallback,
   handleTimezoneGeolocation,
 } from '../features/onboarding/onboarding.handler';
 
@@ -89,6 +89,7 @@ export class BotApp {
     // Create bot instance
     this.bot = new Telegraf<BotContext>(config.botToken);
 
+  
     // Setup handlers
     this.setupHandlers();
 
@@ -102,7 +103,26 @@ export class BotApp {
     // =======================
     // Commands (ONLY /start)
     // =======================
-    bot.command('start', startHandler);
+    bot.command('start', async (ctx) => {
+      await ctx.deleteMessage().catch(() => {});
+      await startHandler(ctx);
+    });
+    bot.command('stats', async (ctx) => {
+      await ctx.deleteMessage().catch(() => {});
+      await showStatsSelection(ctx);
+    });
+    bot.command('settings', async (ctx) => {
+      await ctx.deleteMessage().catch(() => {});
+      await showSettings(ctx);
+    });
+    bot.command('history', async (ctx) => {
+      await ctx.deleteMessage().catch(() => {});
+      await historyHandler(ctx);
+    });
+    bot.command('accounts', async (ctx) => {
+      await ctx.deleteMessage().catch(() => {});
+      await accountsHandler(ctx);
+    });
 
     // =======================
     // Callback query handlers
@@ -119,17 +139,17 @@ export class BotApp {
     bot.action('onb_got_it', onboardingGotItCallback);
     bot.action('onb_start_account', onboardingStartAccountCallback);
     bot.action(/^onb_curr_(UZS|USD|EUR|RUB)$/, currencySelectionCallback);
-    bot.action(/^onb_tz_(.+)$/, timezoneSelectionCallback);
-    bot.action('onb_complete', onboardingCompleteCallback);
 
     // Settings callbacks
     bot.action('settings_change_currency', settingsChangeCurrencyCallback);
     bot.action(/^settings_set_currency_(.+)$/, settingsSetCurrencyCallback);
     bot.action('settings_default_account', settingsDefaultAccountCallback);
     bot.action(/^settings_set_default_(.+)$/, settingsSetDefaultAccountCallback);
+    bot.action('menu_settings', backToSettingsCallback);
+    bot.action('settings_close', settingsCloseCallback);
 
     // Stats callbacks
-    bot.action('stats_to_menu', statsToMenuCallback);
+    bot.action('stats_close', statsCloseCallback);
 
     // Stats selection callbacks
     bot.action('stats_select_overall', statsSelectOverallCallback);
@@ -183,8 +203,8 @@ export class BotApp {
       const isMenuButton = [
         '📊 Счета',
         '📊 Hisoblar',
-        '➕ Транзакция',
-        '➕ Tranzaksiya',
+        '➕ Добавить',
+        '➕ Qo`shish',
         '📜 История',
         '📜 Tarix',
         '📈 Статистика',
@@ -200,9 +220,17 @@ export class BotApp {
 
       // Handle state-based input
       const handled = await stateManager.handleState(userId, ctx);
-      if (!handled) {
-        await transactionHandler(ctx);
+      if (handled) return;
+
+      // Check if user is in onboarding (but sent text instead of clicking button)
+      const currentState = await stateManager.getState(userId);
+      if (currentState && currentState.startsWith('ONBOARDING_')) {
+        // Ignore text during onboarding if not handled by state handler
+        await ctx.deleteMessage().catch(() => {});
+        return;
       }
+
+      await transactionHandler(ctx);
     });
 
     bot.on('voice', async (ctx) => {
@@ -210,6 +238,13 @@ export class BotApp {
 
       const handled = await stateManager.handleState(userId, ctx);
       if (handled) return;
+
+      // Check if user is in onboarding
+      const currentState = await stateManager.getState(userId);
+      if (currentState && currentState.startsWith('ONBOARDING_')) {
+        await ctx.deleteMessage().catch(() => {});
+        return;
+      }
 
       await voiceHandler(ctx);
     });
@@ -219,6 +254,13 @@ export class BotApp {
 
       const handled = await stateManager.handleState(userId, ctx);
       if (handled) return;
+
+      // Check if user is in onboarding
+      const currentState = await stateManager.getState(userId);
+      if (currentState && currentState.startsWith('ONBOARDING_')) {
+        await ctx.deleteMessage().catch(() => {});
+        return;
+      }
 
       await photoHandler(ctx);
     });

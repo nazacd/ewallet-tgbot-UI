@@ -9,6 +9,12 @@ import { apiClient } from '../../services/api.client';
  * @param lang - User's language (or boolean for backwards compatibility)
  * @param forceNew - If true, always send a new message
  */
+/**
+ * Shows the main menu (list of commands)
+ * @param ctx - Bot context
+ * @param lang - User's language (or boolean for backwards compatibility)
+ * @param forceNew - If true, always send a new message
+ */
 export async function showMainMenu(
   ctx: any,
   langOrNew?: any,
@@ -45,7 +51,7 @@ export async function showMainMenu(
   const message = t('menu.main_prompt', lang);
 
   try {
-    await ctx.reply(message, { parse_mode: "HTML", ...keyboard});
+    await ctx.reply(message, { parse_mode: 'HTML', ...keyboard });
   } catch (error) {
     console.error('Error showing main menu:', error);
   }
@@ -54,7 +60,7 @@ export async function showMainMenu(
 /**
  * Builds the ReplyKeyboard for main menu
  */
-function buildReplyKeyboard(lang: Language) {
+export function buildReplyKeyboard(lang: Language) {
   return Markup.keyboard([
     [Markup.button.text(t('menu.accounts', lang)), Markup.button.text(t('menu.transaction', lang))],
     [Markup.button.text(t('menu.history', lang)), Markup.button.text(t('menu.stats', lang))],

@@ -52,6 +52,11 @@ export interface Transaction {
 export interface ParsedTransaction {
   type: 'withdrawal' | 'deposit';
   amount: number;
+  currency: string;
+  original_amount?: number;
+  original_currency?: string;
+  fx_rate?: number;
+  account_id?: string;
   category_id?: number;
   note?: string;
   confidence: number;

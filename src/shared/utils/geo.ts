@@ -1,52 +1,79 @@
+import * as GeoTz from 'geo-tz';
+import cityTimezones from 'city-timezones';
+import moment from 'moment-timezone';
+
 export type Timezone = {
   offset: string;
   name: string;
 };
 
-const cityTimezones: Record<string, Timezone> = {
-  ташкент: { offset: 'UTC+5', name: 'Asia/Tashkent' },
-  tashkent: { offset: 'UTC+5', name: 'Asia/Tashkent' },
-  самарканд: { offset: 'UTC+5', name: 'Asia/Samarkand' },
-  samarkand: { offset: 'UTC+5', name: 'Asia/Samarkand' },
-  москва: { offset: 'UTC+3', name: 'Europe/Moscow' },
-  moscow: { offset: 'UTC+3', name: 'Europe/Moscow' },
-  'санкт-петербург': { offset: 'UTC+3', name: 'Europe/Moscow' },
-  petersburg: { offset: 'UTC+3', name: 'Europe/Moscow' },
-  алматы: { offset: 'UTC+6', name: 'Asia/Almaty' },
-  almaty: { offset: 'UTC+6', name: 'Asia/Almaty' },
-  астана: { offset: 'UTC+6', name: 'Asia/Almaty' },
-  astana: { offset: 'UTC+6', name: 'Asia/Almaty' },
-  'нур-султан': { offset: 'UTC+6', name: 'Asia/Almaty' },
-  бишкек: { offset: 'UTC+6', name: 'Asia/Bishkek' },
-  bishkek: { offset: 'UTC+6', name: 'Asia/Bishkek' },
-};
-
+/**
+ * Get timezone from city name using city-timezones lib
+ */
 export function parseTimezoneFromCity(cityName: string): Timezone | null {
-  const normalized = cityName.toLowerCase().trim();
-  return cityTimezones[normalized] || null;
+  const cityLookup = cityTimezones.lookupViaCity(cityName);
+
+  if (cityLookup && cityLookup.length > 0) {
+    // Take the first match
+    const timezoneName = cityLookup[0].timezone;
+    return createTimezoneObject(timezoneName);
+  }
+
+  return null;
 }
 
+/**
+ * Get timezone from coordinates using geo-tz lib
+ */
 export function parseTimezoneFromCoordinates(lat: number, lon: number): Timezone {
-  if (lon >= 56 && lon <= 73 && lat >= 37 && lat <= 46) {
-    return { offset: 'UTC+5', name: 'Asia/Tashkent' };
+  try {
+    const timezones = GeoTz.find(lat, lon);
+    if (timezones && timezones.length > 0) {
+      return createTimezoneObject(timezones[0]);
+    }
+  } catch (error) {
+    console.error('Error finding timezone from coordinates:', error);
   }
-  if (lon >= 35 && lon <= 50 && lat >= 50 && lat <= 60) {
-    return { offset: 'UTC+3', name: 'Europe/Moscow' };
-  }
-  if (lon >= 46 && lon <= 87 && lat >= 40 && lat <= 55) {
-    return { offset: 'UTC+6', name: 'Asia/Almaty' };
-  }
-  if (lat >= 35 && lat <= 50) {
-    return { offset: 'UTC+5', name: 'Asia/Tashkent' };
-  }
+
+  // Default to UTC if not found
   return { offset: 'UTC+0', name: 'UTC' };
+}
+
+/**
+ * Helper to create Timezone object with formatted offset
+ */
+function createTimezoneObject(timezoneName: string): Timezone {
+  const now = moment();
+  const zone = moment.tz.zone(timezoneName);
+
+  if (!zone) {
+    return { offset: 'UTC+0', name: timezoneName };
+  }
+
+  const offset = zone.utcOffset(now.valueOf());
+  // moment returns offset in minutes, positive is BEHIND UTC (e.g. New York is 300 (5 hours))
+  // We want standard ISO format (e.g. UTC-5)
+  // Actually moment.utcOffset() returns negative for behind UTC.
+  // Let's use moment.format('Z') which gives +05:00
+
+  const formattedOffset = moment.tz(timezoneName).format('Z');
+  // Format: +05:00 -> UTC+5
+  const shortOffset = 'UTC' + formattedOffset.replace(':00', '').replace(/^0/, '');
+
+  return {
+    offset: shortOffset,
+    name: timezoneName
+  };
 }
 
 export function getCommonTimezones(): Array<{ label: string; offset: string }> {
   return [
-    { label: '🇺🇿 UTC+5 (Tashkent)', offset: 'UTC+5' },
-    { label: '🇷🇺 UTC+3 (Moscow)', offset: 'UTC+3' },
-    { label: '🇰🇿 UTC+6 (Almaty)', offset: 'UTC+6' },
+    { label: '🇺🇿 Tashkent (UTC+5)', offset: 'UTC+5' },
+    { label: '🇷🇺 Moscow (UTC+3)', offset: 'UTC+3' },
+    { label: '🇰🇿 Almaty (UTC+5)', offset: 'UTC+5' },
+    { label: '🇺🇸 New York (UTC-5)', offset: 'UTC-5' },
+    { label: '🇬🇧 London (UTC+0)', offset: 'UTC+0' },
+    { label: '🇦🇪 Dubai (UTC+4)', offset: 'UTC+4' },
   ];
 }
 

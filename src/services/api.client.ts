@@ -178,6 +178,9 @@ class APIClient {
       type: 'withdrawal' | 'deposit';
       amount: number;
       currency_code: string;
+      original_amount?: number;
+      original_currency_code?: string;
+      fx_rate?: number;
       note?: string;
       performed_at?: string;
     },

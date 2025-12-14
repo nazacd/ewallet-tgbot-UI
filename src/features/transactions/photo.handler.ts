@@ -9,7 +9,7 @@ import { t, Language } from '../../shared/utils/i18n';
 
 export async function photoHandler(ctx: any) {
   let lang: Language = 'ru';
-  
+
   try {
     const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
@@ -35,24 +35,31 @@ export async function photoHandler(ctx: any) {
       apiClient.parseImage(ctx, fileUrl.href),
     );
 
-
     const categories = await apiClient.getCategories(ctx);
     const category = categories.find((c) => c.id === parsed.category_id);
+
+    let selectedAccount = defaultAccount;
+    if (parsed.account_id) {
+      selectedAccount = accounts.find((a) => a.id === parsed.account_id) || defaultAccount;
+    }
 
     const message = buildTransactionSummary({
       parsed,
       currencyCode,
       categoryName: category?.name,
-      accountName: defaultAccount.name,
+      accountName: selectedAccount.name,
       lang,
     });
 
     await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', {
       parsedTransaction: parsed,
-      accountId: defaultAccount.id,
+      accountId: selectedAccount.id,
     });
 
-    await ctx.reply(message, { parse_mode: "HTML", ...buildConfirmationKeyboard({ allowFurtherEdits: true, lang })});
+    await ctx.reply(message, {
+      parse_mode: 'HTML',
+      ...buildConfirmationKeyboard({ allowFurtherEdits: true, lang }),
+    });
   } catch (error: any) {
     console.error('Receipt parse error:', error);
 

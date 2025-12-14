@@ -45,8 +45,8 @@ export async function transactionHandler(ctx: BotContext) {
 
   try {
     const user = await apiClient.getMe(ctx);
-    const currencyCode = user.currency_code || 'USD';
     const text = ctx.text;
+    const currencyCode = user.currency_code || 'USD';
     lang = (user.language_code || 'ru') as Language;
 
     if (!text) {
@@ -55,11 +55,11 @@ export async function transactionHandler(ctx: BotContext) {
     }
 
     const accounts = await apiClient.getAccounts(ctx);
-    if (accounts.length === 0) {
+    if (accounts === undefined || accounts === null || accounts.length === 0) {
       await ctx.reply(t('transaction.no_accounts_found', lang));
       return;
     }
-    const defaultAccount = accounts.find((a) => a.is_default) || accounts[0];
+    let selectedAccount = accounts.find((a) => a.is_default) || accounts[0];
 
     const parsed = await withProgressMessage(ctx, t('transaction.loading', lang), () =>
       apiClient.parseText(ctx, text),
@@ -68,20 +68,31 @@ export async function transactionHandler(ctx: BotContext) {
     const categories = await apiClient.getCategories(ctx);
     const category = categories.find((c) => c.id === parsed.category_id);
 
+    if (parsed.account_id) {
+      selectedAccount = accounts.find((a) => a.id === parsed.account_id) || accounts[0];
+      if (!selectedAccount) {
+        await ctx.reply(t('transaction.account_not_found', lang));
+        return;
+      }
+    }
+
     const message = buildTransactionSummary({
       parsed,
       currencyCode,
       categoryName: category?.name,
-      accountName: defaultAccount.name,
+      accountName: selectedAccount.name,
       lang,
     });
 
     await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', {
       parsedTransaction: parsed,
-      accountId: defaultAccount.id,
+      accountId: selectedAccount.id,
     });
 
-    await ctx.reply(message, { parse_mode: "HTML", ...buildConfirmationKeyboard({ allowFurtherEdits: true, lang })});
+    await ctx.reply(message, {
+      parse_mode: 'HTML',
+      ...buildConfirmationKeyboard({ allowFurtherEdits: true, lang }),
+    });
   } catch (error: any) {
     console.error('Transaction parse error:', error);
 
@@ -115,6 +126,7 @@ export async function confirmTransactionCallback(ctx: BotContext) {
     const user = await apiClient.getMe(ctx);
     const currencyCode = user.currency_code || 'USD';
     const lang = (user.language_code || 'ru') as Language;
+    const timezone = user.timezone;
 
     if (!account) {
       await updateOrReply(ctx, t('transaction.account_not_found', lang));
@@ -130,7 +142,10 @@ export async function confirmTransactionCallback(ctx: BotContext) {
       category_id: parsed.category_id,
       type: parsed.type,
       amount: parsed.amount,
-      currency_code: currencyCode,
+      currency_code: parsed.currency || currencyCode,
+      original_amount: parsed.original_amount,
+      original_currency_code: parsed.original_currency,
+      fx_rate: parsed.fx_rate,
       note: parsed.note,
       performed_at: parsed.performed_at,
     });
@@ -151,6 +166,7 @@ export async function confirmTransactionCallback(ctx: BotContext) {
       categorySlug: category?.slug || '',
       accountBalance: updatedAccount?.balance,
       lang,
+      timezone,
     });
 
     await updateOrReply(ctx, finalText, {
@@ -158,12 +174,14 @@ export async function confirmTransactionCallback(ctx: BotContext) {
     });
 
     await stateManager.clearState(tgUserId);
-
   } catch (error: any) {
     console.error('Transaction creation error:', error);
     // We need to fetch user again or default to 'ru' if we can't
     const lang = 'ru';
-    await updateOrReply(ctx, `${t('transaction.save_error', lang)} ${t('errors.retry_hint', lang)}`);
+    await updateOrReply(
+      ctx,
+      `${t('transaction.save_error', lang)} ${t('errors.retry_hint', lang)}`,
+    );
     await stateManager.clearState(tgUserId);
   }
 }
@@ -176,10 +194,18 @@ function buildSavedTransactionMessage(options: {
   categorySlug: string;
   accountBalance?: number;
   lang: Language;
+  timezone?: string;
 }) {
-  const { transaction, currencyCode, accountName, categoryName, categorySlug, accountBalance, lang } =
-    options;
-  const emoji = getTransactionEmoji(transaction.type);
+  const {
+    transaction,
+    currencyCode,
+    accountName,
+    categoryName,
+    categorySlug,
+    accountBalance,
+    lang,
+    timezone,
+  } = options;
   const typeText =
     transaction.type === 'deposit'
       ? t('transaction.new_deposit', lang)
@@ -188,21 +214,22 @@ function buildSavedTransactionMessage(options: {
     ? `${getCategoryEmoji(categorySlug)} ${escapeHtml(categoryName)}`
     : `📌 ${t('transaction.category', lang)}`; // Fallback
 
-  const dateStr = formatDate(transaction.created_at);
+  const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
+  const dateStr = formatDate(transaction.created_at, { timezone, locale });
 
   const formattedAmount = formatAmount(transaction.amount, transaction.currency_code || 'USD');
 
   let message = '';
-  message += `<b>✅ ${t('transaction.saved', lang)}</b>\n\n`;
+  message += `<b>${t('transaction.saved', lang)}</b>\n\n`;
 
   if (accountBalance !== undefined) {
     message += `💳 <b>${t('transaction.account_balance', lang)}:</b> ${formatAmount(accountBalance, currencyCode)}\n\n`;
   }
   message += '---\n';
 
-  message += `\n${emoji} ${typeText}\n`;
+  message += `\n${typeText}\n`;
 
-  message += `💰 <b>${t('transaction.amount', lang)}:</b> ${formattedAmount} ${currencyCode}\n`;
+  message += `💰 <b>${t('transaction.amount', lang)}:</b> ${formattedAmount}\n`;
   message += `📁 <b>${t('transaction.category', lang)}:</b> ${categoryText}\n`;
   message += `📊 <b>${t('transaction.account', lang)}:</b> ${accountName}\n`;
   message += `📅 <b>${t('transaction.date', lang)}:</b> ${dateStr}\n`;
@@ -240,15 +267,10 @@ export async function cancelTransactionCallback(ctx: BotContext) {
   const user = await apiClient.getMe(ctx);
   const lang = (user.language_code || 'ru') as Language;
 
-
   // Update message addting a canceled text in the beginning of the message
-  await ctx.editMessageText(
-    `❌ ${t('transaction.canceled', lang)}\n\n${ctx.text}`,
-    {
-      parse_mode: 'HTML',
-    },
-  );
-
+  await ctx.editMessageText(`${t('transaction.canceled', lang)}\n\n${ctx.text}`, {
+    parse_mode: 'HTML',
+  });
 
   await stateManager.clearState(user.tg_user_id);
 }
@@ -293,23 +315,20 @@ export async function editCategoryCallback(ctx: any) {
       ),
     ]);
 
-    buttons.push([Markup.button.callback('« Назад', 'tx_back')]);
-
-    buttons.push([Markup.button.callback(`« ${t('buttons.back', lang)}`, 'tx_back')]);
-
-    await updateOrReply(ctx, t('transaction.choose_category', lang), Markup.inlineKeyboard(buttons));
+    buttons.push([Markup.button.callback(`${t('buttons.back', lang)}`, 'tx_back')]);
+    await updateOrReply(
+      ctx,
+      t('transaction.choose_category', lang),
+      Markup.inlineKeyboard(buttons),
+    );
   } catch (error) {
     console.error('Error loading categories:', error);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('transaction.category_not_found', lang));
   }
 }
 
 // Edit account callback
 export async function editAccountCallback(ctx: any) {
-  const tgUserId = ctx.from.id;
-
   await ctx.answerCbQuery();
 
   const user = await apiClient.getMe(ctx);
@@ -332,59 +351,51 @@ export async function editAccountCallback(ctx: any) {
       ),
     ]);
 
-    buttons.push([Markup.button.callback(`« ${t('buttons.back', lang)}`, 'tx_back')]);
+    buttons.push([Markup.button.callback(`${t('buttons.back', lang)}`, 'tx_back')]);
 
     await updateOrReply(ctx, t('transaction.choose_account', lang), Markup.inlineKeyboard(buttons));
   } catch (error) {
     console.error('Error loading accounts:', error);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('transaction.account_not_found', lang));
   }
 }
 
 // Back to confirmation callback
 export async function backToConfirmCallback(ctx: any) {
-  const tgUserId = ctx.from.id;
-  const data = await stateManager.getData(tgUserId);
-
   await ctx.answerCbQuery();
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+  const data = await stateManager.getData(user.tg_user_id);
 
   if (!data.parsedTransaction || !data.accountId) {
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('transaction.outdated', lang));
-    await stateManager.clearState(tgUserId);
+    await stateManager.clearState(user.tg_user_id);
     return;
   }
 
   try {
     const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
 
-    await stateManager.setState(tgUserId, 'WAIT_TRANSACTION_CONFIRM', data);
+    await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', data);
 
-    await updateOrReply(ctx, summary, {parse_mode: 'HTML', reply_markup: keyboard});
+    await updateOrReply(ctx, summary, { parse_mode: 'HTML', ...keyboard });
   } catch (error) {
     console.error('Error going back to confirmation:', error);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('errors.critical', lang));
   }
 }
 
 // Select category callback
 export async function selectCategoryCallback(ctx: any) {
-  const tgUserId = ctx.from.id;
-  const data = await stateManager.getData(tgUserId);
+  await ctx.answerCbQuery();
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+  const data = await stateManager.getData(user.tg_user_id);
   const categoryId = parseInt(ctx.match[1]);
 
-  await ctx.answerCbQuery();
-
   if (!data.parsedTransaction) {
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('transaction.outdated', lang));
-    await stateManager.clearState(tgUserId);
+    await stateManager.clearState(user.tg_user_id);
     return;
   }
 
@@ -393,8 +404,6 @@ export async function selectCategoryCallback(ctx: any) {
     const category = categories.find((c) => c.id === categoryId);
 
     if (!category) {
-      const user = await apiClient.getMe(ctx);
-      const lang = (user.language_code || 'ru') as Language;
       await updateOrReply(ctx, t('transaction.category_not_found', lang));
       return;
     }
@@ -403,37 +412,26 @@ export async function selectCategoryCallback(ctx: any) {
 
     const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
 
-    await stateManager.setState(tgUserId, 'WAIT_TRANSACTION_CONFIRM', data);
+    await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', data);
 
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
-
-    await updateOrReply(
-      ctx,
-      `${t('transaction.category_updated', lang)}: ${getCategoryEmoji(category.slug)} ${category.name}\n\n${summary}`,
-      keyboard,
-    );
+    await updateOrReply(ctx, summary, { parse_mode: 'HTML', ...keyboard });
   } catch (error) {
     console.error('Error selecting category:', error);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('errors.critical', lang));
   }
 }
 
 // Select account callback
 export async function selectAccountCallback(ctx: any) {
-  const tgUserId = ctx.from.id;
-  const data = await stateManager.getData(tgUserId);
+  await ctx.answerCbQuery();
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+  const data = await stateManager.getData(user.tg_user_id);
   const accountId = ctx.match[1];
 
-  await ctx.answerCbQuery();
-
   if (!data.parsedTransaction) {
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('transaction.outdated', lang));
-    await stateManager.clearState(tgUserId);
+    await stateManager.clearState(user.tg_user_id);
     return;
   }
 
@@ -442,8 +440,6 @@ export async function selectAccountCallback(ctx: any) {
     const account = accounts.find((a) => a.id === accountId);
 
     if (!account) {
-      const user = await apiClient.getMe(ctx);
-      const lang = (user.language_code || 'ru') as Language;
       await updateOrReply(ctx, t('transaction.account_not_found', lang));
       return;
     }
@@ -453,16 +449,11 @@ export async function selectAccountCallback(ctx: any) {
 
     const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
 
-    await stateManager.setState(tgUserId, 'WAIT_TRANSACTION_CONFIRM', data);
+    await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', data);
 
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
-
-    await updateOrReply(ctx, `${t('transaction.account_updated', lang)}: ${account.name}\n\n${summary}`, keyboard);
+    await updateOrReply(ctx, summary, { parse_mode: 'HTML', ...keyboard });
   } catch (error) {
     console.error('Error selecting account:', error);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('errors.critical', lang));
   }
 }
@@ -476,7 +467,7 @@ export async function editAmountHandler(ctx: any, data: any) {
   const lang = (user.language_code || 'ru') as Language;
 
   if (isNaN(amount) || amount <= 0) {
-    await ctx.reply(t('transaction.invalid_amount', lang));
+    await updateOrReply(ctx, t('transaction.invalid_amount', lang));
     return;
   }
 
@@ -484,25 +475,16 @@ export async function editAmountHandler(ctx: any, data: any) {
     const parsed = data.parsedTransaction;
     if (parsed) {
       parsed.amount = amount;
-      await stateManager.setState(ctx.from.id, 'WAIT_TRANSACTION_CONFIRM', {
+      await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', {
         ...data,
         parsedTransaction: parsed,
       });
 
       const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
-
-      // Get account for currency
-      const currencyCode = user.currency_code || 'USD';
-
-      await ctx.reply(
-        `${t('transaction.amount_updated', lang)}: ${formatAmount(amount, currencyCode)}\n\n${summary}`,
-        keyboard,
-      );
+      await updateOrReply(ctx, summary, { parse_mode: 'HTML', ...keyboard });
     }
   } catch (error) {
     console.error('Error selecting account:', error);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
     await updateOrReply(ctx, t('errors.critical', lang));
   }
 }

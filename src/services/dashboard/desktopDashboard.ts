@@ -1,5 +1,5 @@
 import nodeHtmlToImage from 'node-html-to-image';
-import { DashboardData } from '../../types';
+import { BotContext, DashboardData } from '../../core/types';
 
 function formatAmount(amount: number, currency: string): string {
   const absAmount = Math.abs(amount);
@@ -77,7 +77,7 @@ export async function generateDesktopDashboard(data: DashboardData): Promise<Buf
       .summary-item {
         text-align: right;
       }
-      
+
       .summary-label {
         font-size: 14px;
         text-transform: uppercase;
@@ -140,7 +140,7 @@ export async function generateDesktopDashboard(data: DashboardData): Promise<Buf
         font-size: 28px;
         font-weight: 800;
       }
-      
+
       .icon-bg {
         width: 50px;
         height: 50px;
@@ -150,7 +150,7 @@ export async function generateDesktopDashboard(data: DashboardData): Promise<Buf
         justify-content: center;
         font-size: 24px;
       }
-      
+
       .icon-bg.expense { background: #FDEDEC; }
       .icon-bg.income { background: #EAFAF1; }
 
@@ -174,7 +174,7 @@ export async function generateDesktopDashboard(data: DashboardData): Promise<Buf
         max-height: 100%;
         object-fit: contain;
       }
-      
+
       .no-data {
         color: #BDC3C7;
         font-size: 24px;
@@ -241,14 +241,14 @@ export async function generateDesktopDashboard(data: DashboardData): Promise<Buf
   </body>
   </html>`;
 
-  return await nodeHtmlToImage({
+  return (await nodeHtmlToImage({
     html,
     type: 'png',
     encoding: 'binary',
     quality: 100,
     puppeteerArgs: {
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1920,1080'],
-      defaultViewport: { width: 1920, height: 1080 }
+      defaultViewport: { width: 1920, height: 1080 },
     },
-  }) as Buffer;
+  })) as Buffer;
 }

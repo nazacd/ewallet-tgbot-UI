@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { redisClient, redisModule } from '../config/redis';
-import { config } from '../config/env';
-import { AuthResponse } from '../types';
+import { redisClient, redisModule } from '../core/config/redis';
+import { config } from '../core/config/env';
+import { BotContext, AuthResponse } from '../core/types';
 
 interface UserData {
   first_name?: string;
@@ -29,22 +29,15 @@ class AuthService {
 
   async authenticate(tgUserId: number, userData: UserData): Promise<string> {
     try {
-      const response = await axios.post<AuthResponse>(
-        `${config.apiBaseUrl}/auth/telegram`,
-        {
-          tg_user_id: tgUserId,
-          ...userData,
-        }
-      );
+      const response = await axios.post<AuthResponse>(`${config.apiBaseUrl}/auth/telegram`, {
+        tg_user_id: tgUserId,
+        ...userData,
+      });
 
       const token = response.data.token;
 
       // Store token in Redis with TTL
-      await redisClient.setEx(
-        this.getTokenKey(tgUserId),
-        this.TOKEN_TTL,
-        token
-      );
+      await redisClient.setEx(this.getTokenKey(tgUserId), this.TOKEN_TTL, token);
 
       return token;
     } catch (error) {
@@ -84,7 +77,7 @@ class AuthService {
   }
 
   async disconnect(): Promise<void> {
-      await redisModule.disconnect();
+    await redisModule.disconnect();
   }
 }
 

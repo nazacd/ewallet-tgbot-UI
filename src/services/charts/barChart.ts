@@ -20,7 +20,7 @@ export async function renderBarChart(
   labels: string[],
   values: number[],
   title: string,
-  options?: BarChartOptions
+  options?: BarChartOptions,
 ): Promise<Buffer> {
   const chart = new ChartJSNodeCanvas({
     width: WIDTH,
@@ -54,7 +54,7 @@ export async function renderBarChart(
     suffix = 'K';
   }
 
-  const scaledValues = values.map(v => v / scale);
+  const scaledValues = values.map((v) => v / scale);
 
   const config = {
     type: 'bar' as const,
@@ -94,7 +94,8 @@ export async function renderBarChart(
           font: {
             size: 24,
             weight: 'bold' as const,
-            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            family:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
           },
           padding: {
             top: 10,
@@ -126,7 +127,7 @@ export async function renderBarChart(
               size: 12,
             },
             color: '#7F8C8D',
-            callback: function(value: any) {
+            callback: function (value: any) {
               return value + suffix;
             },
           },
@@ -146,21 +147,24 @@ export async function renderBarChart(
             padding: 8,
           },
           grid: {
-            display: false},
+            display: false,
+          },
         },
       },
     },
-    plugins: [{
-      id: 'customCanvasBackgroundColor',
-      beforeDraw: (chart: any) => {
-        const ctx = chart.canvas.getContext('2d');
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-over';
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, chart.width, chart.height);
-        ctx.restore();
-      }
-    }],
+    plugins: [
+      {
+        id: 'customCanvasBackgroundColor',
+        beforeDraw: (chart: any) => {
+          const ctx = chart.canvas.getContext('2d');
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-over';
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, chart.width, chart.height);
+          ctx.restore();
+        },
+      },
+    ],
   };
 
   return await chart.renderToBuffer(config as any);

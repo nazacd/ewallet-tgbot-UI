@@ -1,6 +1,6 @@
 // services/dashboard/storyDashboard.ts
 import nodeHtmlToImage from 'node-html-to-image';
-import { DashboardData } from '../../types';
+import { BotContext, DashboardData } from '../../core/types';
 
 function formatAmount(amount: number, currency: string): string {
   const absAmount = Math.abs(amount);
@@ -156,24 +156,32 @@ export async function generateStoryDashboard(data: DashboardData): Promise<Buffe
         </div>
       </div>
 
-      ${expImg ? `
+      ${
+        expImg
+          ? `
       <div class="chart-section">
         <img src="data:image/png;base64,${expImg}"/>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
-      ${incImg ? `
+      ${
+        incImg
+          ? `
       <div class="chart-section">
         <img src="data:image/png;base64,${incImg}"/>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       ${!expImg && !incImg ? '<div class="no-data">Нет данных для отображения</div>' : ''}
     </div>
   </body>
   </html>`;
 
-  return await nodeHtmlToImage({
+  return (await nodeHtmlToImage({
     html,
     type: 'png',
     encoding: 'binary',
@@ -181,5 +189,5 @@ export async function generateStoryDashboard(data: DashboardData): Promise<Buffe
     puppeteerArgs: {
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     },
-  }) as Buffer;
+  })) as Buffer;
 }

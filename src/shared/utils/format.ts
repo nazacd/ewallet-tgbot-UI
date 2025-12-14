@@ -46,6 +46,7 @@ export function formatDate(
   options: { timezone?: string; locale?: string } = {},
 ): string {
   const { timezone, locale = 'en-US' } = options;
+  console.log('timezone', timezone);
 
   // Shift to the user's timezone first, then format in UTC to avoid host timezone side effects
   const date = convertToTimezone(dateInput, timezone);

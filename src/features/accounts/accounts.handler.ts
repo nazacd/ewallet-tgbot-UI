@@ -18,19 +18,11 @@ export async function accountsHandler(ctx: BotContext | any) {
 
     const accounts = await apiClient.getAccounts(ctx);
 
-    if (accounts.length === 0) {
-      const message = t('accounts.no_accounts', lang);
-
-      const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback(t('accounts.create_button', lang), 'acc_add')],
-        [buildCloseButton(lang)],
-      ]);
-
-      if (ctx.callbackQuery) {
-        await ctx.editMessageText(message, { parse_mode: 'HTML', ...keyboard });
-      } else {
-        await ctx.reply(message, { parse_mode: 'HTML', ...keyboard });
-      }
+    if (accounts === null || accounts === undefined || accounts.length === 0) {
+      // Clear any existing state and redirect to account onboarding
+      await stateManager.clearState(user.tg_user_id);
+      const { startAccountOnboarding } = await import('../onboarding/onboarding.handler');
+      await startAccountOnboarding(ctx);
       return;
     }
 
@@ -249,9 +241,11 @@ export async function setDefaultAccountCallback(ctx: any) {
 
     await ctx.editMessageText(
       t('accounts.set_default_success', lang, [account?.name || '']),
-      { parse_mode: 'HTML', ...Markup.inlineKeyboard([
-        [Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_back')],
-      ]) },
+      {
+        parse_mode: 'HTML', ...Markup.inlineKeyboard([
+          [Markup.button.callback(t('accounts.back_to_accounts', lang), 'acc_back')],
+        ])
+      },
     );
   } catch (error: any) {
     console.error('Set default error:', error);
@@ -273,14 +267,14 @@ export async function deleteAccountCallback(ctx: any) {
     {
       parse_mode: 'HTML',
       ...Markup.inlineKeyboard([
-      [
-        Markup.button.callback(
-          t('accounts.delete_confirm_yes', lang),
-          `acc_delete_confirm_${accountId}`,
-        ),
-        Markup.button.callback(t('confirmation.cancel', lang), `acc_view_${accountId}`),
-      ],
-    ]),
+        [
+          Markup.button.callback(
+            t('accounts.delete_confirm_yes', lang),
+            `acc_delete_confirm_${accountId}`,
+          ),
+          Markup.button.callback(t('confirmation.cancel', lang), `acc_view_${accountId}`),
+        ],
+      ]),
     },
   );
 }

@@ -354,7 +354,7 @@ export async function editAccountCallback(ctx: any) {
     // Get all accounts
     const accounts = await apiClient.getAccounts(ctx);
 
-    if (accounts.length === 0) {
+    if (accounts === null || accounts === undefined || accounts.length === 0) {
       await updateOrReply(ctx, t('transaction.no_accounts_found', lang));
       return;
     }

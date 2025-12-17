@@ -15,7 +15,7 @@ export async function showStatsSelection(ctx: BotContext) {
     const lang = (user.language_code as Language) || 'ru';
     const accounts = await apiClient.getAccounts(ctx);
 
-    if (accounts.length === 0) {
+    if (accounts === null || accounts === undefined || accounts.length === 0) {
       await ctx.reply(
         t('stats.selection.no_accounts', lang),
         Markup.inlineKeyboard([[buildCloseButton(lang)]]),
@@ -56,7 +56,7 @@ export async function showStatsSelection(ctx: BotContext) {
  */
 export async function statsSelectOverallCallback(ctx: any) {
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   // Show animated loader while fetching and generating stats
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, 'month', undefined));
@@ -69,7 +69,7 @@ export async function statsSelectAccountCallback(ctx: any) {
   const accountId = ctx.match[1];
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   // Show animated loader while fetching and generating stats
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, 'month', accountId));
@@ -80,6 +80,6 @@ export async function statsSelectAccountCallback(ctx: any) {
  */
 export async function statsChangeAccountCallback(ctx: any) {
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
   await showStatsSelection(ctx);
 }

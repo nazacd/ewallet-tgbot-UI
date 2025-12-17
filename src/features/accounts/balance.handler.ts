@@ -1,3 +1,4 @@
+import { stateManager } from '../../core/state/state.manager';
 import { BotContext } from '../../core/types';
 import { apiClient } from '../../services/api.client';
 import { formatAmount } from '../../shared/utils/format';
@@ -8,8 +9,11 @@ export async function balanceHandler(ctx: BotContext) {
   try {
     const accounts = await apiClient.getAccounts(ctx);
 
-    if (accounts.length === 0) {
-      await ctx.reply('У вас ещё нет счетов. Используйте /start, чтобы создать первый.');
+    if (accounts === null || accounts === undefined || accounts.length === 0) {
+      // Clear any existing state and redirect to account onboarding
+      await stateManager.clearState(tgUserId);
+      const { startAccountOnboarding } = await import('../onboarding/onboarding.handler');
+      await startAccountOnboarding(ctx);
       return;
     }
 

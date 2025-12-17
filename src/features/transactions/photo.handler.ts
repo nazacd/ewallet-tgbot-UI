@@ -25,7 +25,7 @@ export async function photoHandler(ctx: any) {
     }
     const accounts = await apiClient.getAccounts(ctx);
 
-    if (accounts.length === 0) {
+    if (accounts === null || accounts === undefined || accounts.length === 0) {
       // Clear any existing state and redirect to account onboarding
       await stateManager.clearState(user.tg_user_id);
       const { startAccountOnboarding } = await import('../onboarding/onboarding.handler');

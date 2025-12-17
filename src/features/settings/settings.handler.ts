@@ -112,7 +112,7 @@ export async function settingsDefaultAccountCallback(ctx: any) {
     const lang = (user.language_code || 'ru') as Language;
     const accounts = await apiClient.getAccounts(ctx);
 
-    if (accounts.length === 0) {
+    if (accounts === null || accounts === undefined || accounts.length === 0) {
       await ctx.editMessageText(t('settings.no_accounts', lang), {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
@@ -240,7 +240,10 @@ export async function settingsChangeTimezoneCallback(ctx: any) {
       language: lang,
     });
 
-    await ctx.editMessageText(message, {
+    // Delete the old message and send a new one with ReplyKeyboard
+    // (editMessageText doesn't support ReplyKeyboard, only InlineKeyboard)
+    await ctx.deleteMessage().catch(() => {});
+    await ctx.reply(message, {
       parse_mode: 'HTML',
       ...Markup.keyboard([[Markup.button.locationRequest(t('buttons.send_location', lang))]])
         .resize()

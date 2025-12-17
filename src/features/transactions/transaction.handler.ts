@@ -57,7 +57,10 @@ export async function transactionHandler(ctx: BotContext) {
 
     const accounts = await apiClient.getAccounts(ctx);
     if (accounts === undefined || accounts === null || accounts.length === 0) {
-      await ctx.reply(t('transaction.no_accounts_found', lang));
+      // Clear any existing state and redirect to account onboarding
+      await stateManager.clearState(user.tg_user_id);
+      const { startAccountOnboarding } = await import('../onboarding/onboarding.handler');
+      await startAccountOnboarding(ctx);
       return;
     }
     let selectedAccount = accounts.find((a) => a.is_default) || accounts[0];
@@ -231,7 +234,7 @@ function buildSavedTransactionMessage(options: {
   message += `\n${typeText}\n`;
 
   message += `💰 <b>${t('transaction.amount', lang)}:</b> ${formattedAmount}\n`;
-    // ✅ If conversion exists, show original + rate
+  // ✅ If conversion exists, show original + rate
   const hasFx =
     transaction.original_amount !== undefined &&
     !!transaction.original_currency_code &&

@@ -104,6 +104,7 @@ export type BotState =
   // Transaction states
   | 'WAIT_TRANSACTION_CONFIRM'
   | 'WAIT_TRANSACTION_EDIT_AMOUNT'
+  | 'SETTINGS_TIMEZONE'
   | 'WAIT_TRANSACTION_EDIT_CATEGORY'
   // Account management states
   | 'WAIT_ACCOUNT_NAME'

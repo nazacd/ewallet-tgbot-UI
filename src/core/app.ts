@@ -64,6 +64,9 @@ import {
   settingsSetDefaultAccountCallback,
   backToSettingsCallback,
   settingsCloseCallback,
+  settingsChangeTimezoneCallback,
+  handleTimezoneTextInputInSettings,
+  handleTimezoneGeolocationInSettings,
 } from '../features/settings/settings.handler';
 
 // New onboarding handlers
@@ -89,7 +92,7 @@ export class BotApp {
     // Create bot instance
     this.bot = new Telegraf<BotContext>(config.botToken);
 
-  
+
     // Setup handlers
     this.setupHandlers();
 
@@ -104,23 +107,23 @@ export class BotApp {
     // Commands (ONLY /start)
     // =======================
     bot.command('start', async (ctx) => {
-      await ctx.deleteMessage().catch(() => {});
+      await ctx.deleteMessage().catch(() => { });
       await startHandler(ctx);
     });
     bot.command('stats', async (ctx) => {
-      await ctx.deleteMessage().catch(() => {});
+      await ctx.deleteMessage().catch(() => { });
       await showStatsSelection(ctx);
     });
     bot.command('settings', async (ctx) => {
-      await ctx.deleteMessage().catch(() => {});
+      await ctx.deleteMessage().catch(() => { });
       await showSettings(ctx);
     });
     bot.command('history', async (ctx) => {
-      await ctx.deleteMessage().catch(() => {});
+      await ctx.deleteMessage().catch(() => { });
       await historyHandler(ctx);
     });
     bot.command('accounts', async (ctx) => {
-      await ctx.deleteMessage().catch(() => {});
+      await ctx.deleteMessage().catch(() => { });
       await accountsHandler(ctx);
     });
 
@@ -147,6 +150,7 @@ export class BotApp {
     bot.action(/^settings_set_default_(.+)$/, settingsSetDefaultAccountCallback);
     bot.action('menu_settings', backToSettingsCallback);
     bot.action('settings_close', settingsCloseCallback);
+    bot.action('settings_change_timezone', settingsChangeTimezoneCallback);
 
     // Stats callbacks
     bot.action('stats_close', statsCloseCallback);
@@ -226,7 +230,7 @@ export class BotApp {
       const currentState = await stateManager.getState(userId);
       if (currentState && currentState.startsWith('ONBOARDING_')) {
         // Ignore text during onboarding if not handled by state handler
-        await ctx.deleteMessage().catch(() => {});
+        await ctx.deleteMessage().catch(() => { });
         return;
       }
 
@@ -242,7 +246,7 @@ export class BotApp {
       // Check if user is in onboarding
       const currentState = await stateManager.getState(userId);
       if (currentState && currentState.startsWith('ONBOARDING_')) {
-        await ctx.deleteMessage().catch(() => {});
+        await ctx.deleteMessage().catch(() => { });
         return;
       }
 
@@ -258,7 +262,7 @@ export class BotApp {
       // Check if user is in onboarding
       const currentState = await stateManager.getState(userId);
       if (currentState && currentState.startsWith('ONBOARDING_')) {
-        await ctx.deleteMessage().catch(() => {});
+        await ctx.deleteMessage().catch(() => { });
         return;
       }
 
@@ -269,10 +273,17 @@ export class BotApp {
       const userId = ctx.from.id;
       const currentState = await stateManager.getState(userId);
 
-      // Handle geolocation for timezone selection
+      // Handle geolocation for timezone selection in onboarding
       if (currentState === 'ONBOARDING_TIMEZONE') {
         const data = await stateManager.getData(userId);
         await handleTimezoneGeolocation(ctx, data);
+        return;
+      }
+
+      // Handle geolocation for timezone selection in settings
+      if (currentState === 'SETTINGS_TIMEZONE') {
+        const data = await stateManager.getData(userId);
+        await handleTimezoneGeolocationInSettings(ctx, data);
         return;
       }
     });
@@ -282,7 +293,7 @@ export class BotApp {
     this.bot.catch((err, ctx) => {
       console.error('Ошибка бота:', err);
       const lang = (ctx.from?.language_code || 'ru') as Language;
-      ctx.reply(t('errors.critical', lang)).catch(() => {});
+      ctx.reply(t('errors.critical', lang)).catch(() => { });
     });
   }
 

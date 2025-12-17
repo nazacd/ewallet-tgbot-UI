@@ -1,5 +1,8 @@
+// @ts-ignore - no type declarations available
 import * as GeoTz from 'geo-tz';
+// @ts-ignore - no type declarations available
 import cityTimezones from 'city-timezones';
+// @ts-ignore - no type declarations available
 import moment from 'moment-timezone';
 
 export type Timezone = {

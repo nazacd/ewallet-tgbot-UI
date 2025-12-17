@@ -89,6 +89,10 @@ export const messages = {
         account_creation: '❌ Ошибка создания счёта. Попробуй /start заново.',
       },
 
+      need_account: `💼 <b>Сначала создадим счёт</b>
+
+Чтобы начать учёт, нужен хотя бы один счёт для хранения денег.`,
+
       tutorial: {
         category_other: 'Прочее',
         date_today: 'сегодня',
@@ -154,6 +158,13 @@ export const messages = {
       choose_account: '📊 <b>Счёт по умолчанию</b>\n\nВыбери основной счёт:',
       account_changed: '✅ Счёт по умолчанию изменён',
       account_change_error: '❌ Не удалось изменить счёт',
+
+      timezone: '🌍 Часовой пояс',
+      change_timezone: '🌍 Изменить часовой пояс',
+      timezone_current: (tz: string) => `🕐 <b>Текущий часовой пояс:</b> ${tz}`,
+      timezone_prompt: `🕐 <b>Часовой пояс</b>\n\nНапиши название города или отправь геолокацию 📍`,
+      timezone_updated: (tz: string) => `✅ Часовой пояс изменён на <b>${tz}</b>`,
+      timezone_change_error: '❌ Не удалось изменить часовой пояс',
     },
 
     start: {
@@ -445,6 +456,8 @@ Endi shunchaki yozing yoki ovozli xabar yuboring! 🎤`,
         account_creation: '❌ Hisob yaratishda xatolik. /start ni qayta bosing.',
       },
 
+      need_account: `💼 <b>Avval hisob yaratamiz</b>\n\nHisobni boshlash uchun kamida bitta hisob kerak.`,
+
       tutorial: {
         category_other: 'Boshqa',
         date_today: 'bugun',
@@ -509,6 +522,13 @@ Matn ✏️, ovoz 🎤 yoki chek rasmi 📸 yuboring
       choose_account: '📊 <b>Asosiy hisob</b>\n\nAsosiy hisobni tanlang:',
       account_changed: `✅ Asosiy hisob o'zgartirildi`,
       account_change_error: `❌ Hisobni o'zgartirib bo'lmadi`,
+
+      timezone: '🌍 Vaqt mintaqasi',
+      change_timezone: `🌍 Vaqt mintaqasini o'zgartirish`,
+      timezone_current: (tz: string) => `🕐 <b>Joriy vaqt mintaqasi:</b> ${tz}`,
+      timezone_prompt: `🕐 <b>Vaqt mintaqasi</b>\n\nShahar nomini yozing yoki geolokatsiya yuboring 📍`,
+      timezone_updated: (tz: string) => `✅ Vaqt mintaqasi <b>${tz}</b> ga o'zgartirildi`,
+      timezone_change_error: `❌ Vaqt mintaqasini o'zgartirib bo'lmadi`,
     },
 
     start: {
@@ -670,7 +690,7 @@ Birinchi tranzaksiyani qo'shing:
 
       confidence_warning: `⚠️ Aniq emasman. Ma'lumotni tekshiring!`,
       save_error: `❌ Tranzaksiyani saqlab bo'lmadi`,
-      outdated:   `⚠️ Ma'lumot eskirgan. Qayta urinib ko'ring`,
+      outdated: `⚠️ Ma'lumot eskirgan. Qayta urinib ko'ring`,
       account_not_found: `❌ Hisob topilmadi`,
       category_not_found: `❌ Kategoriya topilmadi`,
 

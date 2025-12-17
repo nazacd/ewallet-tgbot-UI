@@ -22,7 +22,10 @@ export async function voiceHandler(ctx: any) {
 
     const accounts = await apiClient.getAccounts(ctx);
     if (accounts.length === 0) {
-      await ctx.reply(t('transaction.no_accounts_found', lang));
+      // Clear any existing state and redirect to account onboarding
+      await stateManager.clearState(user.tg_user_id);
+      const { startAccountOnboarding } = await import('../onboarding/onboarding.handler');
+      await startAccountOnboarding(ctx);
       return;
     }
 

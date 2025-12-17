@@ -434,7 +434,7 @@ export async function handleTimezoneTextInput(ctx: any, data: any) {
     onboardingScreen: 11,
   });
 
-  await ctx.deleteMessage(processingMsg.message_id).catch(() => {});
+  await ctx.deleteMessage(processingMsg.message_id).catch(() => { });
 
   // Show Screen 11: Create account and complete
   await completeOnboarding(ctx, data, lang, timezone.offset);
@@ -464,7 +464,7 @@ export async function handleTimezoneGeolocation(ctx: any, data: any) {
     onboardingScreen: 11,
   });
 
-  await ctx.deleteMessage(processingMsg.message_id).catch(() => {});
+  await ctx.deleteMessage(processingMsg.message_id).catch(() => { });
 
   // Show Screen 11: Create account and complete
   await completeOnboarding(ctx, data, lang, timezone.offset);
@@ -508,6 +508,36 @@ async function completeOnboarding(ctx: any, data: any, lang: Language, timezone:
     console.error('Account creation error:', error);
     await ctx.reply(t('onboarding.errors.account_creation', lang));
     await stateManager.clearState(userId);
+  }
+}
+
+/**
+ * Start account onboarding for users who skipped initial onboarding
+ * Begins from Screen 6 (Account Concept)
+ */
+export async function startAccountOnboarding(ctx: BotContext) {
+  try {
+    const user = await apiClient.getMe(ctx);
+    const lang = (user.language_code || 'ru') as Language;
+    const userId = ctx.from.id;
+
+    // Show explanatory message first
+    await ctx.reply(t('onboarding.need_account', lang), {
+      parse_mode: 'HTML',
+    });
+
+    // Set state to Account Concept screen
+    await stateManager.setState(userId, 'ONBOARDING_ACCOUNT_CONCEPT', {
+      language: lang,
+      onboardingScreen: 6,
+    });
+
+    // Show Screen 6: Account concept explanation
+    await showAccountConcept(ctx, lang);
+  } catch (error: any) {
+    console.error('Start account onboarding error:', error);
+    const lang = 'ru';
+    await ctx.reply(t('errors.critical', lang));
   }
 }
 

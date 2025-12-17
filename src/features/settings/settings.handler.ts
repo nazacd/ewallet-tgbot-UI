@@ -18,7 +18,8 @@ export async function showSettings(ctx: any): Promise<void> {
     const message =
       `${t('settings.title', lang)}\n\n` +
       `${t('settings.current_currency', lang)}: ${user.currency_code || 'USD'}\n` +
-      `${t('settings.default_account', lang)}: ${defaultAccount?.name || t('settings.not_set', lang)}\n`;
+      `${t('settings.default_account', lang)}: ${defaultAccount?.name || t('settings.not_set', lang)}\n` +
+      `${t('settings.timezone', lang)}: ${user.timezone || 'UTC+5'}\n`;
 
     await ctx.reply(message, {
       parse_mode: 'HTML',
@@ -30,6 +31,7 @@ export async function showSettings(ctx: any): Promise<void> {
             'settings_default_account',
           ),
         ],
+        [Markup.button.callback(t('settings.change_timezone', lang), 'settings_change_timezone')],
         [Markup.button.callback(t('buttons.close', lang), 'settings_close')],
       ]),
     });
@@ -189,7 +191,8 @@ export async function backToSettingsCallback(ctx: any) {
     const message =
       `${t('settings.title', lang)}\n\n` +
       `${t('settings.current_currency', lang)}: ${user.currency_code || 'USD'}\n` +
-      `${t('settings.default_account', lang)}: ${defaultAccount?.name || t('settings.not_set', lang)}\n`;
+      `${t('settings.default_account', lang)}: ${defaultAccount?.name || t('settings.not_set', lang)}\n` +
+      `${t('settings.timezone', lang)}: ${user.timezone || 'UTC+5'}\n`;
 
     await ctx.editMessageText(message, {
       parse_mode: 'HTML',
@@ -201,6 +204,7 @@ export async function backToSettingsCallback(ctx: any) {
             'settings_default_account',
           ),
         ],
+        [Markup.button.callback(t('settings.change_timezone', lang), 'settings_change_timezone')],
         [Markup.button.callback(t('buttons.close', lang), 'settings_close')],
       ]),
     });
@@ -215,5 +219,108 @@ export async function backToSettingsCallback(ctx: any) {
  */
 export async function settingsCloseCallback(ctx: any) {
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 }
+
+/**
+ * Show timezone change screen
+ */
+export async function settingsChangeTimezoneCallback(ctx: any) {
+  await ctx.answerCbQuery();
+
+  try {
+    const user = await apiClient.getMe(ctx);
+    const lang = (user.language_code || 'ru') as Language;
+    const currentTimezone = user.timezone || 'UTC+5';
+
+    const message = `${t('settings.timezone_current', lang, [currentTimezone])}\\n\\n${t('settings.timezone_prompt', lang)}`;
+
+    // Set state to await timezone input
+    await stateManager.setState(user.tg_user_id, 'SETTINGS_TIMEZONE', {
+      language: lang,
+    });
+
+    await ctx.editMessageText(message, {
+      parse_mode: 'HTML',
+      ...Markup.keyboard([[Markup.button.locationRequest(t('buttons.send_location', lang))]])
+        .resize()
+        .oneTime(),
+    });
+  } catch (error) {
+    console.error('Error showing timezone change:', error);
+    const lang = 'ru';
+    await ctx.reply(t('errors.critical', lang));
+  }
+}
+
+/**
+ * Handle timezone update from text input (city name)
+ */
+export async function handleTimezoneTextInputInSettings(ctx: any, data: any) {
+  const userId = ctx.from.id;
+  const lang = (data.language || 'ru') as Language;
+  const cityName = ctx.message.text.trim();
+
+  const { parseTimezoneFromCity } = await import('../../shared/utils/geo');
+  const timezone = parseTimezoneFromCity(cityName);
+
+  if (!timezone) {
+    await ctx.reply(t('onboarding.errors.city_not_found', lang));
+    return;
+  }
+
+  try {
+    // Update user timezone
+    await apiClient.updateMe(ctx, { timezone: timezone.offset });
+
+    // Clear state
+    await stateManager.clearState(userId);
+
+    // Show success message and return to settings
+    await ctx.reply(t('settings.timezone_updated', lang, [timezone.offset]), {
+      parse_mode: 'HTML',
+    });
+
+    // Show settings menu again
+    await showSettings(ctx);
+  } catch (error) {
+    console.error('Error updating timezone:', error);
+    await ctx.reply(t('settings.timezone_change_error', lang));
+    await stateManager.clearState(userId);
+  }
+}
+
+/**
+ * Handle timezone update from geolocation
+ */
+export async function handleTimezoneGeolocationInSettings(ctx: any, data: any) {
+  const userId = ctx.from.id;
+  const lang = (data.language || 'ru') as Language;
+  const location = ctx.message.location;
+
+  const { parseTimezoneFromCoordinates } = await import('../../shared/utils/geo');
+  const timezone = parseTimezoneFromCoordinates(location.latitude, location.longitude);
+
+  try {
+    // Update user timezone
+    await apiClient.updateMe(ctx, { timezone: timezone.offset });
+
+    // Clear state
+    await stateManager.clearState(userId);
+
+    // Show success message and return to settings
+    await ctx.reply(t('settings.timezone_updated', lang, [timezone.offset]), {
+      parse_mode: 'HTML',
+    });
+
+    // Show settings menu again
+    await showSettings(ctx);
+  } catch (error) {
+    console.error('Error updating timezone:', error);
+    await ctx.reply(t('settings.timezone_change_error', lang));
+    await stateManager.clearState(userId);
+  }
+}
+
+// Register state handlers
+stateManager.register('SETTINGS_TIMEZONE', handleTimezoneTextInputInSettings);

@@ -234,7 +234,7 @@ export async function statsHandler(
       const labels = top.map((item) => {
         // Find the category to get emoji
         const category = stats.expense_by_category.find((c: any) => c.category_name === item.label);
-        const emoji = category ? getCategoryEmoji(category.category_slug) : '📌';
+        const emoji = category ? getCategoryEmoji(category.category_emoji) : '📌';
         return `${emoji} ${item.label}`;
       });
       const values = top.map((item) => item.value);
@@ -264,7 +264,7 @@ export async function statsHandler(
       const labels = top.map((item) => {
         // Find the category to get emoji
         const category = stats.income_by_category.find((c: any) => c.category_name === item.label);
-        const emoji = category ? getCategoryEmoji(category.category_slug) : '📌';
+        const emoji = category ? getCategoryEmoji(category.category_emoji) : '📌';
         return `${emoji} ${item.label}`;
       });
       const values = top.map((item) => item.value);
@@ -298,7 +298,7 @@ export async function statsHandler(
       caption += `<b>${t('stats.expenses_title', lang)}</b>\n`;
       caption += `<blockquote expandable>`;
       stats.expense_by_category.forEach((c) => {
-        caption += `${getCategoryEmoji(c.category_slug)} ${c.category_name}: ${formatAmount(c.total, currencyCode)}\n`;
+        caption += `${getCategoryEmoji(c.category_emoji)} ${c.category_name}: ${formatAmount(c.total, currencyCode)}\n`;
       });
       caption += `</blockquote>`;
     }
@@ -308,7 +308,7 @@ export async function statsHandler(
       caption += `\n<b>${t('stats.income_title', lang)}</b>\n`;
       caption += `<blockquote expandable>`;
       stats.income_by_category.forEach((c) => {
-        caption += `${getCategoryEmoji(c.category_slug)} ${c.category_name}: ${formatAmount(c.total, currencyCode)}\n`;
+        caption += `${getCategoryEmoji(c.category_emoji)} ${c.category_name}: ${formatAmount(c.total, currencyCode)}\n`;
       });
       caption += `</blockquote>`;
     }
@@ -397,7 +397,7 @@ function buildStatsKeyboard(
 export async function statsCloseCallback(ctx: any) {
   await ctx.answerCbQuery();
   // Delete stats message
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 }
 
 // Helper to expand compact account ID back to full UUID
@@ -423,7 +423,7 @@ export async function statsPeriodMonthCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, 'month', accountId));
 }
@@ -433,7 +433,7 @@ export async function statsPeriodWeekCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, 'week', accountId));
 }
@@ -443,7 +443,7 @@ export async function statsPeriodDayCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, 'day', accountId));
 }
@@ -453,7 +453,7 @@ export async function statsPeriodAllCallback(ctx: any) {
   const accountId = await expandAccountId(ctx, compactAccId);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, undefined, accountId));
 }
@@ -476,7 +476,7 @@ export async function statsNavigatePrevCallback(ctx: any) {
   const prevDate = calculatePreviousPeriod(period, currentDate);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, period, accountId, prevDate));
 }
@@ -498,7 +498,7 @@ export async function statsNavigateNextCallback(ctx: any) {
   const nextDate = calculateNextPeriod(period, currentDate);
 
   await ctx.answerCbQuery();
-  await ctx.deleteMessage().catch(() => {});
+  await ctx.deleteMessage().catch(() => { });
 
   await withAnimatedLoader(ctx, STATS_FRAMES, () => statsHandler(ctx, period, accountId, nextDate));
 }

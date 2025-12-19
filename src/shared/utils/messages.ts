@@ -1,6 +1,6 @@
 import { Markup } from 'telegraf';
 import { BotContext, ParsedTransaction } from '../../core/types';
-import { formatAmount, getCategoryEmoji, getTransactionEmoji, escapeHtml, formatFxRate } from './format';
+import { formatAmount, getTransactionEmoji, escapeHtml, formatFxRate } from './format';
 import { t, Language } from './i18n';
 
 
@@ -8,18 +8,18 @@ export function buildTransactionSummary({
   parsed,
   currencyCode,
   categoryName,
-  categorySlug,
+  categoryEmoji,
   accountName,
   lang,
 }: {
   parsed: ParsedTransaction;
   currencyCode: string;
   categoryName?: string;
-  categorySlug?: string;
+  categoryEmoji?: string;
   accountName?: string;
   lang: Language;
 }): string {
-  const categoryEmoji = categorySlug ? getCategoryEmoji(categorySlug) : '📌';
+  const displayEmoji = categoryEmoji || '📌';
   const typeText =
     parsed.type === 'deposit'
       ? t('transaction.new_deposit', lang)
@@ -47,7 +47,7 @@ export function buildTransactionSummary({
   }
 
   if (categoryName) {
-    message += `${categoryEmoji} <b>${t('transaction.category', lang)}</b>: ${escapeHtml(categoryName)}\n`;
+    message += `${displayEmoji} <b>${t('transaction.category', lang)}</b>: ${escapeHtml(categoryName)}\n`;
   }
 
   if (accountName) {

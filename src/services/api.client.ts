@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { BotContext } from '../core/types';
+import { BotContext, Subcategory } from '../core/types';
 import { config } from '../core/config/env';
 import { authService } from './auth.service';
 import {
@@ -175,6 +175,7 @@ class APIClient {
     data: {
       account_id: string;
       category_id?: number;
+      subcategory_id?: number;
       type: 'withdrawal' | 'deposit';
       amount: number;
       currency_code: string;
@@ -197,6 +198,7 @@ class APIClient {
     params?: {
       account_id?: string;
       category_id?: number;
+      subcategory_id?: number;
       type?: 'withdrawal' | 'deposit';
       from?: string;
       to?: string;
@@ -227,7 +229,19 @@ class APIClient {
   async updateTransaction(
     ctx: any,
     transactionId: string,
-    data: Partial<Transaction>,
+    data: {
+      account_id: string;
+      category_id?: number;
+      subcategory_id?: number;
+      type: 'withdrawal' | 'deposit';
+      amount: number;
+      currency_code: string;
+      original_amount?: number;
+      original_currency_code?: string;
+      fx_rate?: number;
+      note?: string;
+      performed_at?: string;
+    },
   ): Promise<Transaction> {
     return this.request<Transaction>(ctx, {
       method: 'PUT',
@@ -248,6 +262,13 @@ class APIClient {
     return this.request<Category[]>(ctx, {
       method: 'GET',
       url: '/categories',
+    });
+  }
+
+  async getSubcategories(ctx: any): Promise<Subcategory[]> {
+    return this.request<Subcategory[]>(ctx, {
+      method: 'GET',
+      url: '/subcategories',
     });
   }
 

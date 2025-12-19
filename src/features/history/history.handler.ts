@@ -97,6 +97,7 @@ async function sendHistoryPage(
   const pageTransactions = allTransactions.slice(startIdx, endIdx);
 
   const categories = await apiClient.getCategories(ctx);
+  const subcategories = await apiClient.getSubcategories(ctx);
   const accounts = await apiClient.getAccounts(ctx);
   const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
 
@@ -137,11 +138,20 @@ async function sendHistoryPage(
       // Тип транзакции — компактные стрелочки
       const typeEmoji = tx.type === 'deposit' ? '🔺' : '🔻';
 
+
       const category = categories.find((c) => c.id === tx.category_id);
+      const subcategory = subcategories.find((s) => s.id === tx.subcategory_id);
       const account = accounts.find((a) => a.id === tx.account_id);
 
-      const categoryEmoji = category ? getCategoryEmoji(category.slug) : '📌';
-      const rawCategoryName = category ? category.name : t('history.other', lang);
+      const categoryEmoji = subcategory?.emoji
+        ? subcategory.emoji
+        : (category?.emoji
+          ? category.emoji
+          : getCategoryEmoji(category?.emoji));
+
+      const rawCategoryName = subcategory
+        ? subcategory.name
+        : (category ? category.name : t('history.other', lang));
       const shortCategoryName = truncateLabel(rawCategoryName, 10);
       const categoryText = `${categoryEmoji} ${shortCategoryName}`;
 
@@ -325,8 +335,10 @@ export async function historyViewCallback(ctx: any) {
   }
 
   const categories = await apiClient.getCategories(ctx);
+  const subcategories = await apiClient.getSubcategories(ctx);
   const accounts = await apiClient.getAccounts(ctx);
   const category = categories.find((c) => c.id === tx.category_id);
+  const subcategory = subcategories.find((s) => s.id === tx.subcategory_id);
   const account = accounts.find((a) => a.id === tx.account_id);
 
   const user = await apiClient.getMe(ctx);
@@ -336,9 +348,11 @@ export async function historyViewCallback(ctx: any) {
 
   const emoji = getTransactionEmoji(tx.type);
   const typeText = tx.type === 'deposit' ? t('history.income', lang) : t('history.expense', lang);
-  const categoryText = category
-    ? `${getCategoryEmoji(category.slug)} ${escapeHtml(category.name)}`
-    : `📌 ${t('history.other', lang)}`;
+  const categoryText = subcategory
+    ? `${subcategory.emoji || '📌'} ${escapeHtml(subcategory.name)}`
+    : (category
+      ? `${getCategoryEmoji(category.emoji)} ${escapeHtml(category.name)}`
+      : `📌 ${t('history.other', lang)}`);
   const accountName = account ? escapeHtml(account.name) : t('history.unknown', lang);
 
   const num = String(txIndex + 1).padStart(2, '0');

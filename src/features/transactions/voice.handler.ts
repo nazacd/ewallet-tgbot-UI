@@ -6,6 +6,7 @@ import {
   withProgressMessage,
 } from '../../shared/utils/messages';
 import { t, Language } from '../../shared/utils/i18n';
+import { getCategoryEmoji } from '../../shared/utils/format';
 
 export async function voiceHandler(ctx: any) {
   let lang: Language = 'ru';
@@ -36,7 +37,26 @@ export async function voiceHandler(ctx: any) {
     );
 
     const categories = await apiClient.getCategories(ctx);
-    const category = categories.find((c) => c.id === parsed.category_id);
+    const subcategories = await apiClient.getSubcategories(ctx);
+
+    // Logic: if parsed has subcategory_id, try to find it
+    let category = categories.find((c) => c.id === parsed.category_id);
+    let subcategory = subcategories.find((s) => s.id === parsed.subcategory_id);
+
+    // If API returned a subcategory but no category_id, try to resolve category from subcategory
+    if (subcategory && !category) {
+      category = categories.find(c => c.id === subcategory?.category_id);
+    }
+
+    const displayEmoji = subcategory?.emoji
+      ? subcategory.emoji
+      : (category?.emoji
+        ? category.emoji
+        : getCategoryEmoji(category?.emoji));
+
+    const displayName = subcategory
+      ? `${category?.name ? category.name + ' > ' : ''}${subcategory.name}`
+      : category?.name;
 
     let selectedAccount = defaultAccount;
     if (parsed.account_id) {
@@ -46,7 +66,8 @@ export async function voiceHandler(ctx: any) {
     const message = buildTransactionSummary({
       parsed,
       currencyCode,
-      categoryName: category?.name,
+      categoryName: displayName,
+      categoryEmoji: displayEmoji,
       accountName: selectedAccount.name,
       lang,
     });

@@ -28,12 +28,27 @@ async function buildConfirmationMessage(data: any, ctx: BotContext) {
   const account = accounts.find((a) => a.id === data.accountId);
 
   const categories = await apiClient.getCategories(ctx);
+  const subcategories = await apiClient.getSubcategories(ctx);
+
   const category = categories.find((c) => c.id === data.parsedTransaction?.category_id);
+  const subcategory = subcategories.find((s) => s.id === data.parsedTransaction?.subcategory_id);
+
+  // If we have a subcategory, use its emoji. If not, use category emoji.
+  const displayEmoji = subcategory?.emoji
+    ? subcategory.emoji
+    : (category?.emoji
+      ? category.emoji
+      : getCategoryEmoji(category?.emoji));
+
+  const displayName = subcategory
+    ? `${category?.name ? category.name + ' > ' : ''}${subcategory.name}`
+    : category?.name;
 
   const summary = buildTransactionSummary({
     parsed,
     currencyCode,
-    categoryName: category?.name,
+    categoryName: displayName,
+    categoryEmoji: displayEmoji,
     accountName: account?.name,
     lang,
   });
@@ -70,20 +85,32 @@ export async function transactionHandler(ctx: BotContext) {
     );
 
     const categories = await apiClient.getCategories(ctx);
-    const category = categories.find((c) => c.id === parsed.category_id);
+    const subcategories = await apiClient.getSubcategories(ctx);
 
-    if (parsed.account_id) {
-      selectedAccount = accounts.find((a) => a.id === parsed.account_id) || accounts[0];
-      if (!selectedAccount) {
-        await ctx.reply(t('transaction.account_not_found', lang));
-        return;
-      }
+    // Logic: if parsed has subcategory_id, try to find it
+    let category = categories.find((c) => c.id === parsed.category_id);
+    let subcategory = subcategories.find((s) => s.id === parsed.subcategory_id);
+
+    // If API returned a subcategory but no category_id, try to resolve category from subcategory
+    if (subcategory && !category) {
+      category = categories.find(c => c.id === subcategory?.category_id);
     }
+
+    const displayEmoji = subcategory?.emoji
+      ? subcategory.emoji
+      : (category?.emoji
+        ? category.emoji
+        : getCategoryEmoji(category?.emoji));
+
+    const displayName = subcategory
+      ? `${category?.name ? category.name + ' > ' : ''}${subcategory.name}`
+      : category?.name;
 
     const message = buildTransactionSummary({
       parsed,
       currencyCode,
-      categoryName: category?.name,
+      categoryName: displayName,
+      categoryEmoji: displayEmoji,
       accountName: selectedAccount.name,
       lang,
     });
@@ -160,14 +187,17 @@ export async function confirmTransactionCallback(ctx: BotContext) {
 
     // подтягиваем категорию, чтобы вставить её в финальный текст
     const categories = await apiClient.getCategories(ctx);
+    const subcategories = await apiClient.getSubcategories(ctx);
+
     const category = categories.find((c) => c.id === parsed.category_id);
+    const subcategory = subcategories.find((s) => s.id === parsed.subcategory_id);
 
     const finalText = buildSavedTransactionMessage({
       transaction,
       currencyCode,
       accountName: account.name,
-      categoryName: category?.name || '',
-      categorySlug: category?.slug || '',
+      categoryName: subcategory ? subcategory.name : (category?.name || ''),
+      emoji: subcategory?.emoji || category?.emoji,
       accountBalance: updatedAccount?.balance,
       lang,
       timezone,
@@ -195,7 +225,7 @@ function buildSavedTransactionMessage(options: {
   currencyCode: string;
   accountName: string;
   categoryName: string;
-  categorySlug: string;
+  emoji?: string;
   accountBalance?: number;
   lang: Language;
   timezone?: string;
@@ -205,7 +235,7 @@ function buildSavedTransactionMessage(options: {
     currencyCode,
     accountName,
     categoryName,
-    categorySlug,
+    emoji,
     accountBalance,
     lang,
     timezone,
@@ -214,8 +244,9 @@ function buildSavedTransactionMessage(options: {
     transaction.type === 'deposit'
       ? t('transaction.new_deposit', lang)
       : t('transaction.new_expense', lang);
+
   const categoryText = categoryName
-    ? `${getCategoryEmoji(categorySlug)} ${escapeHtml(categoryName)}`
+    ? `${getCategoryEmoji(emoji)} ${escapeHtml(categoryName)}`
     : `📌 ${t('transaction.category', lang)}`; // Fallback
 
   const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
@@ -326,7 +357,7 @@ export async function editCategoryCallback(ctx: any) {
     // Create inline keyboard with categories
     const buttons = categories.map((cat) => [
       Markup.button.callback(
-        `${getCategoryEmoji(cat.slug)} ${cat.name}`,
+        `${getCategoryEmoji(cat.emoji)} ${cat.name}`,
         `tx_select_category_${cat.id}`,
       ),
     ]);
@@ -420,19 +451,80 @@ export async function selectCategoryCallback(ctx: any) {
     const category = categories.find((c) => c.id === categoryId);
 
     if (!category) {
+      // Should not happen really
       await updateOrReply(ctx, t('transaction.category_not_found', lang));
       return;
     }
-    // Update parsed transaction with new category
+
+    const subcategories = await apiClient.getSubcategories(ctx);
+    const categorySubcategories = subcategories.filter(s => s.category_id === categoryId);
+
+    if (categorySubcategories.length > 0) {
+      // Show subcategories
+      const buttons = categorySubcategories.map((sub) => [
+        Markup.button.callback(
+          `${sub.emoji || '📌'} ${sub.name}`,
+          `tx_select_subcategory_${sub.id}`
+        )
+      ]);
+
+      buttons.push([Markup.button.callback(`${t('buttons.back', lang)}`, 'tx_edit_category')]);
+
+      await updateOrReply(
+        ctx,
+        `${getCategoryEmoji(category.emoji)} ${category.name}\n${t('transaction.choose_subcategory', lang) || 'Choose subcategory'}`,
+        Markup.inlineKeyboard(buttons)
+      );
+      return;
+    }
+
+    // No subcategories, select the category directly
     data.parsedTransaction.category_id = categoryId;
+    data.parsedTransaction.subcategory_id = undefined; // Clear subcategory if verified only category
 
     const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
-
     await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', data);
-
     await updateOrReply(ctx, summary, { parse_mode: 'HTML', ...keyboard });
+
   } catch (error) {
     console.error('Error selecting category:', error);
+    await updateOrReply(ctx, t('errors.critical', lang));
+  }
+}
+
+// Select subcategory callback
+export async function selectSubcategoryCallback(ctx: any) {
+  await ctx.answerCbQuery();
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+  const data = await stateManager.getData(user.tg_user_id);
+  const subcategoryId = parseInt(ctx.match[1]);
+
+  if (!data.parsedTransaction) {
+    await updateOrReply(ctx, t('transaction.outdated', lang));
+    await stateManager.clearState(user.tg_user_id);
+    return;
+  }
+
+  try {
+    const subcategories = await apiClient.getSubcategories(ctx);
+    const subcategory = subcategories.find(s => s.id === subcategoryId);
+
+    if (!subcategory) {
+      await updateOrReply(ctx, t('transaction.category_not_found', lang));
+      return;
+    }
+
+    // Update parsed transaction with new category AND subcategory
+    data.parsedTransaction.category_id = subcategory.category_id;
+    data.parsedTransaction.subcategory_id = subcategoryId;
+
+    const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
+    await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', data);
+    await updateOrReply(ctx, summary, { parse_mode: 'HTML', ...keyboard });
+
+  } catch (error) {
+    console.error('Error selecting subcategory:', error);
     await updateOrReply(ctx, t('errors.critical', lang));
   }
 }

@@ -403,12 +403,84 @@ export async function historyViewCallback(ctx: any) {
     ...Markup.inlineKeyboard([
       [
         Markup.button.callback(
+          t('history.delete', lang),
+          `history_delete_ask_${tx.id}_${data.currentPage || 0}`,
+        ),
+      ],
+      [
+        Markup.button.callback(
           t('history.back_to_history', lang),
           `history_back_${data.currentPage || 0}`,
         ),
       ],
     ]),
   });
+}
+
+export async function historyDeleteAskCallback(ctx: any) {
+  const params = ctx.match[1].split('_');
+  const txId = params[0];
+  const page = params[1] || '0';
+  const userId = ctx.from.id;
+
+  const data = await stateManager.getData(userId);
+  if (!data || !data.transactions) {
+    await ctx.answerCbQuery(t('history.outdated', 'ru'));
+    return;
+  }
+
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+
+  await ctx.editMessageText(t('history.delete_confirm', lang), {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [
+        Markup.button.callback(
+          t('history.delete_yes', lang),
+          `history_delete_confirm_${txId}_${page}`,
+        ),
+      ],
+      [
+        Markup.button.callback(
+          t('history.delete_cancel', lang),
+          `history_delete_cancel_${page}`, // Just back to history or back to tx view? Back to history is safer.
+        ),
+      ],
+    ]),
+  });
+}
+
+export async function historyDeleteConfirmCallback(ctx: any) {
+  const params = ctx.match[1].split('_');
+  const txId = params[0];
+  const page = parseInt(params[1] || '0', 10);
+  const userId = ctx.from.id;
+
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+
+  try {
+    await apiClient.deleteTransaction(ctx, txId);
+    await ctx.answerCbQuery(t('history.delete_success', lang));
+
+    // Reload history
+    await historyHandler(ctx);
+  } catch (error) {
+    console.error('Delete tx error:', error);
+    await ctx.answerCbQuery(t('history.delete_error', lang));
+    // Back to history page
+    ctx.match = [null, page.toString()];
+    await historyPageCallback(ctx);
+  }
+}
+
+export async function historyDeleteCancelCallback(ctx: any) {
+  const page = parseInt(ctx.match[1], 10);
+  await ctx.answerCbQuery();
+  // Return to history list
+  ctx.match = [null, page.toString()];
+  await historyPageCallback(ctx);
 }
 
 // Back to history callback

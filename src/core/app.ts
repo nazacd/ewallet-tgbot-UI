@@ -21,6 +21,9 @@ import {
   historyPageCallback,
   historyViewCallback,
   historyBackCallback,
+  historyDeleteAskCallback,
+  historyDeleteConfirmCallback,
+  historyDeleteCancelCallback,
 } from '../features/history/history.handler';
 import {
   accountsHandler,
@@ -190,6 +193,9 @@ export class BotApp {
     bot.action(/^history_page_(\d+)$/, historyPageCallback);
     bot.action(/^history_view_(\d+)$/, historyViewCallback);
     bot.action(/^history_back_(\d+)$/, historyBackCallback);
+    bot.action(/^history_delete_ask_(.+)_(\d+)$/, historyDeleteAskCallback);
+    bot.action(/^history_delete_confirm_(.+)_(\d+)$/, historyDeleteConfirmCallback);
+    bot.action(/^history_delete_cancel_(\d+)$/, historyDeleteCancelCallback);
 
     // =======================
     // Message handlers

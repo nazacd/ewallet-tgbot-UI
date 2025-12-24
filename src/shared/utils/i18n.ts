@@ -299,6 +299,12 @@ export const messages = {
       note: 'Комментарий',
 
       back_to_history: '◀️ К истории',
+      delete: '🗑 Удалить',
+      delete_confirm: '⚠️ Вы уверены, что хотите удалить эту транзакцию?',
+      delete_success: '✅ Транзакция удалена',
+      delete_error: '❌ Не удалось удалить транзакцию',
+      delete_yes: '✅ Да, удалить',
+      delete_cancel: '❌ Отмена',
     },
 
     currency: {
@@ -666,6 +672,12 @@ Birinchi tranzaksiyani qo'shing:
       note: 'Izoh',
 
       back_to_history: '◀️ Tarixga',
+      delete: '🗑 O\'chirish',
+      delete_confirm: '⚠️ Ushbu tranzaksiyani o\'chirmoqchimisiz?',
+      delete_success: '✅ Tranzaksiya o\'chirildi',
+      delete_error: '❌ Tranzaksiyani o\'chirib bo\'lmadi',
+      delete_yes: '✅ Ha, o\'chirish',
+      delete_cancel: '❌ Bekor qilish',
     },
 
     currency: {

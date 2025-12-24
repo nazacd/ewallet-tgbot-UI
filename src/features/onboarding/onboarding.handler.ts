@@ -8,7 +8,7 @@ import {
   parseTimezoneFromCoordinates,
   formatTimezone,
 } from '../../shared/utils/geo';
-import { getCategoryEmoji } from '../../shared/utils/format';
+
 
 /**
  * Screen 0: Language Selection

@@ -26,9 +26,19 @@ export interface Account {
 
 export interface Category {
   id: number;
-  slug: string;
+  user_id?: string;
   position: number;
   name: string;
+  emoji?: string;
+}
+
+export interface Subcategory {
+  id: number;
+  user_id?: string;
+  category_id: number;
+  position: number;
+  name: string;
+  emoji?: string;
 }
 
 export interface Transaction {
@@ -36,6 +46,7 @@ export interface Transaction {
   user_id: string;
   account_id: string;
   category_id?: number;
+  subcategory_id?: number;
   type: 'withdrawal' | 'deposit';
   status?: string;
   amount: number;
@@ -58,6 +69,7 @@ export interface ParsedTransaction {
   fx_rate?: number;
   account_id?: string;
   category_id?: number;
+  subcategory_id?: number;
   note?: string;
   confidence: number;
   performed_at?: string;
@@ -74,14 +86,14 @@ export interface TransactionStats {
   balance: number;
   income_by_category: {
     category_id: number;
-    category_slug: string;
     category_name: string;
+    category_emoji?: string;
     total: number;
   }[];
   expense_by_category: {
     category_id: number;
-    category_slug: string;
     category_name: string;
+    category_emoji?: string;
     total: number;
   }[];
 }

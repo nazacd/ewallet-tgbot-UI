@@ -110,37 +110,11 @@ export function getTransactionEmoji(type: 'withdrawal' | 'deposit'): string {
 }
 
 // Get category emoji (you can expand this)
-export function getCategoryEmoji(categorySlug: string): string {
-  const emojiMap: Record<string, string> = {
-    'food-dining': '🍽️',
-    transport: '🚌',
-    groceries: '🛒',
-    shopping: '🛍️',
-    entertainment: '🎉',
-    'health-medical': '🩺',
-    housing: '🏠',
-    utilities: '💡',
-    education: '📚',
-    'personal-care': '💅',
-    travel: '✈️',
-    'gifts-donations': '🎁',
-    insurance: '🛡️',
-    investments: '📈',
-    salary: '💼',
-    freelance: '🧑‍💻',
-    'business-income': '🏢',
-    refunds: '↩️',
-    'fees-charges': '💸',
-    subscriptions: '🔁',
-    pets: '🐾',
-    'sports-fitness': '🏋️‍♂️',
-    bills: '🧾',
-    taxes: '🏦',
-    other: '📦',
-  };
-
-  const key = categorySlug.toLowerCase();
-  return emojiMap[key] || '📌';
+// Get category emoji (you can expand this)
+// Get category emoji
+// Get category emoji
+export function getCategoryEmoji(categoryEmoji?: string): string {
+  return categoryEmoji || '📌';
 }
 
 // Escape markdown special characters for Telegram

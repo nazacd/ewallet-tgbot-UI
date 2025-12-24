@@ -97,6 +97,7 @@ async function sendHistoryPage(
   const pageTransactions = allTransactions.slice(startIdx, endIdx);
 
   const categories = await apiClient.getCategories(ctx);
+  const subcategories = await apiClient.getSubcategories(ctx);
   const accounts = await apiClient.getAccounts(ctx);
   const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
 
@@ -137,11 +138,20 @@ async function sendHistoryPage(
       // Тип транзакции — компактные стрелочки
       const typeEmoji = tx.type === 'deposit' ? '🔺' : '🔻';
 
+
       const category = categories.find((c) => c.id === tx.category_id);
+      const subcategory = subcategories.find((s) => s.id === tx.subcategory_id);
       const account = accounts.find((a) => a.id === tx.account_id);
 
-      const categoryEmoji = category ? getCategoryEmoji(category.slug) : '📌';
-      const rawCategoryName = category ? category.name : t('history.other', lang);
+      const categoryEmoji = subcategory?.emoji
+        ? subcategory.emoji
+        : (category?.emoji
+          ? category.emoji
+          : getCategoryEmoji(category?.emoji));
+
+      const rawCategoryName = subcategory
+        ? subcategory.name
+        : (category ? category.name : t('history.other', lang));
       const shortCategoryName = truncateLabel(rawCategoryName, 10);
       const categoryText = `${categoryEmoji} ${shortCategoryName}`;
 
@@ -325,8 +335,10 @@ export async function historyViewCallback(ctx: any) {
   }
 
   const categories = await apiClient.getCategories(ctx);
+  const subcategories = await apiClient.getSubcategories(ctx);
   const accounts = await apiClient.getAccounts(ctx);
   const category = categories.find((c) => c.id === tx.category_id);
+  const subcategory = subcategories.find((s) => s.id === tx.subcategory_id);
   const account = accounts.find((a) => a.id === tx.account_id);
 
   const user = await apiClient.getMe(ctx);
@@ -336,9 +348,11 @@ export async function historyViewCallback(ctx: any) {
 
   const emoji = getTransactionEmoji(tx.type);
   const typeText = tx.type === 'deposit' ? t('history.income', lang) : t('history.expense', lang);
-  const categoryText = category
-    ? `${getCategoryEmoji(category.slug)} ${escapeHtml(category.name)}`
-    : `📌 ${t('history.other', lang)}`;
+  const categoryText = subcategory
+    ? `${subcategory.emoji || '📌'} ${escapeHtml(subcategory.name)}`
+    : (category
+      ? `${getCategoryEmoji(category.emoji)} ${escapeHtml(category.name)}`
+      : `📌 ${t('history.other', lang)}`);
   const accountName = account ? escapeHtml(account.name) : t('history.unknown', lang);
 
   const num = String(txIndex + 1).padStart(2, '0');
@@ -389,12 +403,84 @@ export async function historyViewCallback(ctx: any) {
     ...Markup.inlineKeyboard([
       [
         Markup.button.callback(
+          t('history.delete', lang),
+          `history_delete_ask_${tx.id}_${data.currentPage || 0}`,
+        ),
+      ],
+      [
+        Markup.button.callback(
           t('history.back_to_history', lang),
           `history_back_${data.currentPage || 0}`,
         ),
       ],
     ]),
   });
+}
+
+export async function historyDeleteAskCallback(ctx: any) {
+  const params = ctx.match[1].split('_');
+  const txId = params[0];
+  const page = params[1] || '0';
+  const userId = ctx.from.id;
+
+  const data = await stateManager.getData(userId);
+  if (!data || !data.transactions) {
+    await ctx.answerCbQuery(t('history.outdated', 'ru'));
+    return;
+  }
+
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+
+  await ctx.editMessageText(t('history.delete_confirm', lang), {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [
+        Markup.button.callback(
+          t('history.delete_yes', lang),
+          `history_delete_confirm_${txId}_${page}`,
+        ),
+      ],
+      [
+        Markup.button.callback(
+          t('history.delete_cancel', lang),
+          `history_delete_cancel_${page}`, // Just back to history or back to tx view? Back to history is safer.
+        ),
+      ],
+    ]),
+  });
+}
+
+export async function historyDeleteConfirmCallback(ctx: any) {
+  const params = ctx.match[1].split('_');
+  const txId = params[0];
+  const page = parseInt(params[1] || '0', 10);
+  const userId = ctx.from.id;
+
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+
+  try {
+    await apiClient.deleteTransaction(ctx, txId);
+    await ctx.answerCbQuery(t('history.delete_success', lang));
+
+    // Reload history
+    await historyHandler(ctx);
+  } catch (error) {
+    console.error('Delete tx error:', error);
+    await ctx.answerCbQuery(t('history.delete_error', lang));
+    // Back to history page
+    ctx.match = [null, page.toString()];
+    await historyPageCallback(ctx);
+  }
+}
+
+export async function historyDeleteCancelCallback(ctx: any) {
+  const page = parseInt(ctx.match[1], 10);
+  await ctx.answerCbQuery();
+  // Return to history list
+  ctx.match = [null, page.toString()];
+  await historyPageCallback(ctx);
 }
 
 // Back to history callback

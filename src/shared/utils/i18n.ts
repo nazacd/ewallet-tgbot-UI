@@ -352,7 +352,10 @@ export const messages = {
 Попробуй так:
 • <code>Кофе 5000</code>
 • <code>Обед 25000</code>
-• <code>Зарплата 5000000</code>`
+• <code>Зарплата 5000000</code>`,
+
+      editInWebApp: 'Нажмите ниже, чтобы отредактировать в приложении:',
+      openEditor: '✏️ Открыть редактор'
     },
 
     confirmation: {
@@ -716,7 +719,10 @@ Kamida bitta hisob yarating: /start → «Hisoblar».`,
 Buni sinab ko'ring:
 • <code>Kofe 5000</code>
 • <code>Tushlik 25000</code>
-• <code>Oylik 5000000</code>`
+• <code>Oylik 5000000</code>`,
+
+      editInWebApp: "Tahrirlovchini ochish uchun bosing:",
+      openEditor: "✏️ Tahrirlovchini ochish"
     },
 
     confirmation: {

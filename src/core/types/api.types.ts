@@ -16,3 +16,14 @@ export interface HealthCheckResponse {
   uptime: number;
   timestamp: string;
 }
+
+export interface WebAppDataRequest {
+  data: any;
+  queryId: string;
+}
+
+export interface WebAppDataResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}

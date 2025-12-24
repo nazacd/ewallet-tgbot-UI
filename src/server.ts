@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { Telegraf } from 'telegraf';
 import { config } from './core/config/env';
 import { BotContext } from './core/types';
-import { SendMessageRequest, SendMessageResponse, HealthCheckResponse } from './core/types/api.types';
+import { SendMessageRequest, SendMessageResponse, HealthCheckResponse, WebAppDataRequest, WebAppDataResponse } from './core/types/api.types';
 
 export function createServer(bot: Telegraf<BotContext>) {
   const app = express();
@@ -64,6 +64,47 @@ export function createServer(bot: Telegraf<BotContext>) {
         success: false,
         error: error.message || 'Failed to send message',
       } as SendMessageResponse);
+    }
+  });
+
+  // API endpoint for WebApp data (when sendData is unavailable)
+  app.post('/api/webapp-data', async (req: Request, res: Response) => {
+    try {
+      const { data, queryId }: WebAppDataRequest = req.body;
+
+      if (!queryId) {
+        return res.status(400).json({
+          success: false,
+          error: 'queryId is required',
+        } as WebAppDataResponse);
+      }
+
+      console.log('📱 Received data from WebApp:', data);
+
+      // Encode data as JSON string if it's an object
+      const messageText = typeof data === 'string' ? data : JSON.stringify(data);
+
+      // Send data back to Telegram via answerWebAppQuery
+      // This sends a message on behalf of the user to the chat
+      await bot.telegram.answerWebAppQuery(queryId, {
+        type: 'article',
+        id: queryId,
+        title: 'Data',
+        input_message_content: {
+          message_text: messageText,
+        },
+      });
+
+      res.json({
+        success: true,
+        message: 'Data received and processed via answerWebAppQuery',
+      } as WebAppDataResponse);
+    } catch (error: any) {
+      console.error('WebApp data error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to process WebApp data',
+      } as WebAppDataResponse);
     }
   });
   return app;

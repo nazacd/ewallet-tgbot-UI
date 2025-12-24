@@ -12,14 +12,9 @@ import { startHandler } from '../features/start/start.handler';
 import {
   transactionHandler,
   confirmTransactionCallback,
-  editTransactionCallback,
   cancelTransactionCallback,
-  editAmountCallback,
-  editCategoryCallback,
-  editAccountCallback,
   backToConfirmCallback,
-  selectCategoryCallback,
-  selectAccountCallback,
+  handleWebAppData,
 } from '../features/transactions/transaction.handler';
 import {
   historyHandler,
@@ -172,14 +167,15 @@ export class BotApp {
 
     // Transaction callbacks
     bot.action('tx_confirm', confirmTransactionCallback);
-    bot.action('tx_edit', editTransactionCallback);
+
     bot.action('tx_cancel', cancelTransactionCallback);
-    bot.action('tx_edit_amount', editAmountCallback);
-    bot.action('tx_edit_category', editCategoryCallback);
-    bot.action('tx_edit_account', editAccountCallback);
-    bot.action('tx_back', backToConfirmCallback);
-    bot.action(/^tx_select_category_(.+)$/, selectCategoryCallback);
-    bot.action(/^tx_select_account_(.+)$/, selectAccountCallback);
+    bot.action('tx_back', backToConfirmCallback);  // Still needed for WebApp editor back button
+    // Deprecated inline keyboard editing handlers removed - now using WebApp
+    // bot.action('tx_edit_amount', editAmountCallback);
+    // bot.action('tx_edit_category', editCategoryCallback);
+    // bot.action('tx_edit_account', editAccountCallback);
+    // bot.action(/^tx_select_category_(.+)$/, selectCategoryCallback);
+    // bot.action(/^tx_select_account_(.+)$/, selectAccountCallback);
 
     // Account callbacks
     bot.action('acc_add', addAccountCallback);
@@ -287,6 +283,9 @@ export class BotApp {
         return;
       }
     });
+
+    // Handle WebApp data (when user sends data from WebApp)
+    bot.on('web_app_data', handleWebAppData);
   }
 
   private setupErrorHandling() {

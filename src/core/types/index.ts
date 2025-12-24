@@ -127,6 +127,9 @@ export type BotState =
 export interface StateData {
   // Transaction data
   parsedTransaction?: ParsedTransaction;
+  parsedTransactionMessage?: {
+    message_id: number;
+  };
   accountId?: string;
   transactionDraft?: Partial<Transaction>;
 

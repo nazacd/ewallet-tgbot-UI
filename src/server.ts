@@ -3,7 +3,10 @@ import cors from 'cors';
 import { Telegraf } from 'telegraf';
 import { config } from './core/config/env';
 import { BotContext } from './core/types';
-import { SendMessageRequest, SendMessageResponse, HealthCheckResponse, WebAppDataRequest, WebAppDataResponse } from './core/types/api.types';
+import { SendMessageRequest, SendMessageResponse, HealthCheckResponse, WebAppDataRequest, WebAppDataResponse, MiniAppTransactionRequest, MiniAppTransactionResponse } from './core/types/api.types';
+import { stateManager } from './core/state/state.manager';
+import { buildConfirmationMessage } from './features/transactions/transaction.handler';
+
 
 export function createServer(bot: Telegraf<BotContext>) {
   const app = express();
@@ -79,44 +82,64 @@ export function createServer(bot: Telegraf<BotContext>) {
     }
   });
 
-  // API endpoint for WebApp data (when sendData is unavailable)
-  app.post('/api/webapp-data', async (req: Request, res: Response) => {
+  // API endpoint for MiniApp transaction callback (Updates existing message)
+  app.post('/api/miniapp/transactions/callback', async (req: Request, res: Response) => {
     try {
-      const { data, queryId }: WebAppDataRequest = req.body;
+      // 1. Parse and validate body
+      const body: MiniAppTransactionRequest = req.body;
+      const { from, data } = body;
 
-      if (!queryId) {
+      if (!from.id || !data) {
         return res.status(400).json({
           success: false,
-          error: 'queryId is required',
-        } as WebAppDataResponse);
+          error: 'Missing required fields: user_id, message_id, or data',
+        } as MiniAppTransactionResponse);
       }
 
-      console.log('📱 Received data from WebApp:', data);
+      console.log(`📱 Received MiniApp transaction callback for user ${from.id}`);
 
-      // Encode data as JSON string if it's an object
-      const messageText = typeof data === 'string' ? data : JSON.stringify(data);
+      // 2. Update State
+      const currentState = await stateManager.getData(from.id);
+      const updatedStateData = {
+        parsedTransaction: data,
+        parsedTransactionMessage: currentState.parsedTransactionMessage,
+        accountId: data.account_id || currentState.accountId,
+      };
 
-      // Send data back to Telegram via answerWebAppQuery
-      // This sends a message on behalf of the user to the chat
-      await bot.telegram.answerWebAppQuery(queryId, {
-        type: 'article',
-        id: queryId,
-        title: 'Data',
-        input_message_content: {
-          message_text: messageText,
-        },
-      });
+      await stateManager.setState(from.id, 'WAIT_TRANSACTION_CONFIRM', updatedStateData);
 
-      res.json({
+      // 3. Mock Context for API Client
+      const mockCtx: any = {
+        from: from,
+        telegram: bot.telegram,
+      };
+
+      // 4. Build new message content
+      const { summary, keyboard } = await buildConfirmationMessage(updatedStateData, mockCtx);
+
+      // 5. Edit the Telegram message
+      await bot.telegram.editMessageText(
+        from.id,
+        updatedStateData.parsedTransactionMessage?.message_id,
+        undefined,
+        summary,
+        {
+          parse_mode: 'HTML',
+          ...keyboard,
+        }
+      );
+
+      return res.json({
         success: true,
-        message: 'Data received and processed via answerWebAppQuery',
-      } as WebAppDataResponse);
+        message: 'Transaction updated successfully',
+      } as MiniAppTransactionResponse);
+
     } catch (error: any) {
-      console.error('WebApp data error:', error);
+      console.error('MiniApp callback error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to process WebApp data',
-      } as WebAppDataResponse);
+        error: error.message || 'Failed to update transaction',
+      } as MiniAppTransactionResponse);
     }
   });
   return app;

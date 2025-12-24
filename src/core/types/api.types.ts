@@ -1,3 +1,5 @@
+import { ParsedTransaction } from ".";
+
 export interface SendMessageRequest {
   userId: number;
   message: string;
@@ -23,6 +25,23 @@ export interface WebAppDataRequest {
 }
 
 export interface WebAppDataResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface MiniAppTransactionRequest {
+  from: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    username: string;
+    language_code: string;
+  };
+  data: ParsedTransaction;
+}
+
+export interface MiniAppTransactionResponse {
   success: boolean;
   message?: string;
   error?: string;

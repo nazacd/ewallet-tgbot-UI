@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import { Telegraf } from 'telegraf';
 import { config } from './core/config/env';
 import { BotContext } from './core/types';
@@ -6,6 +7,17 @@ import { SendMessageRequest, SendMessageResponse, HealthCheckResponse, WebAppDat
 
 export function createServer(bot: Telegraf<BotContext>) {
   const app = express();
+
+  // CORS configuration
+  app.use(cors({
+    origin: [
+      'https://miniapp.kapusta.whereismy.city',
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    credentials: true
+  }));
 
   // JSON body parser
   app.use(express.json());

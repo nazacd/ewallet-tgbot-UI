@@ -1,24 +1,38 @@
+// @ts-ignore - no type declarations available
+import moment from 'moment-timezone';
+
 // Format amount with thousand separators
 export function formatAmount(amount: number, currencyCode?: string): string {
   const formatted = amount.toLocaleString('en-US');
   return currencyCode ? `${formatted} ${currencyCode}` : formatted;
 }
 
-// Convert timezone offset string (e.g. "UTC+5", "+05:30") to minutes
+
+// Convert timezone string to minutes
+// Supports legacy "UTC+5" format AND standard IANA "Asia/Tashkent" format
 export function getTimezoneOffsetMinutes(timezone?: string): number {
   if (!timezone) return 0;
 
-  const cleaned = timezone.toUpperCase().replace('UTC', '').replace('GMT', '').trim();
-  if (!cleaned) return 0;
+  // 1. Try legacy "UTC+N" parsing
+  if (timezone.toUpperCase().startsWith('UTC') || timezone.toUpperCase().startsWith('GMT')) {
+    const cleaned = timezone.toUpperCase().replace('UTC', '').replace('GMT', '').trim();
+    if (!cleaned) return 0;
 
-  const match = cleaned.match(/^([+-]?)(\d{1,2})(?::?(\d{2}))?$/);
-  if (!match) return 0;
+    const match = cleaned.match(/^([+-]?)(\d{1,2})(?::?(\d{2}))?$/);
+    if (match) {
+      const sign = match[1] === '-' ? -1 : 1;
+      const hours = parseInt(match[2], 10) || 0;
+      const minutes = parseInt(match[3] || '0', 10) || 0;
+      return sign * (hours * 60 + minutes);
+    }
+  }
 
-  const sign = match[1] === '-' ? -1 : 1;
-  const hours = parseInt(match[2], 10) || 0;
-  const minutes = parseInt(match[3] || '0', 10) || 0;
+  // 2. Try IANA timezone (e.g. "Asia/Tashkent") using moment-timezone
+  if (moment.tz.zone(timezone)) {
+      return moment.tz(timezone).utcOffset();
+  }
 
-  return sign * (hours * 60 + minutes);
+  return 0;
 }
 
 // Convert a date to user's timezone (offset-based) while keeping backend values in UTC

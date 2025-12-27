@@ -11,6 +11,7 @@ export function buildTransactionSummary({
   categoryEmoji,
   accountName,
   lang,
+  timezone,
 }: {
   parsed: ParsedTransaction;
   currencyCode: string;
@@ -18,6 +19,7 @@ export function buildTransactionSummary({
   categoryEmoji?: string;
   accountName?: string;
   lang: Language;
+  timezone?: string;
 }): string {
   const displayEmoji = categoryEmoji || '📌';
   const typeText =
@@ -60,7 +62,9 @@ export function buildTransactionSummary({
   }
 
   if (parsed.performed_at) {
-    message += `📅 <b>${t('transaction.date', lang)}</b>: ${escapeHtml(parsed.performed_at)}\n`;
+    const { formatDate } = require('./format');
+    const dateStr = formatDate(parsed.performed_at, { timezone, locale: lang === 'uz' ? 'uz-UZ' : 'ru-RU' });
+    message += `📅 <b>${t('transaction.date', lang)}</b>: ${escapeHtml(dateStr)}\n`;
   }
 
   if (parsed.confidence < 0.7) {

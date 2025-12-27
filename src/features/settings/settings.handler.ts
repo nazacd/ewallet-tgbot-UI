@@ -274,13 +274,13 @@ export async function handleTimezoneTextInputInSettings(ctx: any, data: any) {
 
   try {
     // Update user timezone
-    await apiClient.updateMe(ctx, { timezone: timezone.offset });
+    await apiClient.updateMe(ctx, { timezone: timezone.name });
 
     // Clear state
     await stateManager.clearState(userId);
 
     // Show success message and return to settings
-    await ctx.reply(t('settings.timezone_updated', lang, [timezone.offset]), {
+    await ctx.reply(t('settings.timezone_updated', lang, [timezone.name]), {
       parse_mode: 'HTML',
     });
 
@@ -306,13 +306,13 @@ export async function handleTimezoneGeolocationInSettings(ctx: any, data: any) {
 
   try {
     // Update user timezone
-    await apiClient.updateMe(ctx, { timezone: timezone.offset });
+    await apiClient.updateMe(ctx, { timezone: timezone.name });
 
     // Clear state
     await stateManager.clearState(userId);
 
     // Show success message and return to settings
-    await ctx.reply(t('settings.timezone_updated', lang, [timezone.offset]), {
+    await ctx.reply(t('settings.timezone_updated', lang, [timezone.name]), {
       parse_mode: 'HTML',
     });
 

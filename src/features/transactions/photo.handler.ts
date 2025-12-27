@@ -73,6 +73,7 @@ export async function photoHandler(ctx: any) {
       categoryEmoji: displayEmoji,
       accountName: selectedAccount.name,
       lang,
+      timezone: user.timezone,
     });
 
     await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', {

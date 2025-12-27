@@ -51,6 +51,7 @@ export async function buildConfirmationMessage(data: any, ctx: BotContext) {
     categoryEmoji: displayEmoji,
     accountName: account?.name,
     lang,
+    timezone: user.timezone,
   });
 
   // Encode data for WebApp

@@ -53,33 +53,32 @@ function createTimezoneObject(timezoneName: string): Timezone {
     return { offset: 'UTC+0', name: timezoneName };
   }
 
-  const offset = zone.utcOffset(now.valueOf());
-  // moment returns offset in minutes, positive is BEHIND UTC (e.g. New York is 300 (5 hours))
-  // We want standard ISO format (e.g. UTC-5)
-  // Actually moment.utcOffset() returns negative for behind UTC.
-  // Let's use moment.format('Z') which gives +05:00
+  // Use the IANA name as the primary identifier (stored in 'name')
+  // We still calculate offset for display purposes
 
   const formattedOffset = moment.tz(timezoneName).format('Z');
   // Format: +05:00 -> UTC+5
   const shortOffset = 'UTC' + formattedOffset.replace(':00', '').replace(/^0/, '');
 
   return {
-    offset: shortOffset,
-    name: timezoneName
+    offset: shortOffset, // Keep for backward compatibility/display
+    name: timezoneName   // This is now the IANA name (e.g., 'Asia/Tashkent')
   };
 }
 
-export function getCommonTimezones(): Array<{ label: string; offset: string }> {
+export function getCommonTimezones(): Array<{ label: string; value: string }> {
   return [
-    { label: '🇺🇿 Tashkent (UTC+5)', offset: 'UTC+5' },
-    { label: '🇷🇺 Moscow (UTC+3)', offset: 'UTC+3' },
-    { label: '🇰🇿 Almaty (UTC+5)', offset: 'UTC+5' },
-    { label: '🇺🇸 New York (UTC-5)', offset: 'UTC-5' },
-    { label: '🇬🇧 London (UTC+0)', offset: 'UTC+0' },
-    { label: '🇦🇪 Dubai (UTC+4)', offset: 'UTC+4' },
+    { label: '🇺🇿 Tashkent (Asia/Tashkent)', value: 'Asia/Tashkent' },
+    { label: '🇷🇺 Moscow (Europe/Moscow)', value: 'Europe/Moscow' },
+    { label: '🇰🇿 Almaty (Asia/Almaty)', value: 'Asia/Almaty' },
+    { label: '🇺🇸 New York (America/New_York)', value: 'America/New_York' },
+    { label: '🇬🇧 London (Europe/London)', value: 'Europe/London' },
+    { label: '🇦🇪 Dubai (Asia/Dubai)', value: 'Asia/Dubai' },
   ];
 }
 
 export function formatTimezone(timezone: Timezone): string {
+  // Prefer showing the Name (IANA) but maybe include offset for clarity?
+  // Current UI exp: "UTC+5 (Asia/Tashkent)"
   return `${timezone.offset} (${timezone.name})`;
 }

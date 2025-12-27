@@ -421,7 +421,7 @@ export async function handleTimezoneTextInput(ctx: any, data: any) {
   }
 
   // Save timezone to user profile
-  await apiClient.updateMe(ctx, { timezone: timezone.offset });
+  await apiClient.updateMe(ctx, { timezone: timezone.name });
 
   // Remove keyboard
   const processingMsg = await ctx.reply(t('transaction.loading', lang), {
@@ -437,7 +437,7 @@ export async function handleTimezoneTextInput(ctx: any, data: any) {
   await ctx.deleteMessage(processingMsg.message_id).catch(() => { });
 
   // Show Screen 11: Create account and complete
-  await completeOnboarding(ctx, data, lang, timezone.offset);
+  await completeOnboarding(ctx, data, lang, timezone.name);
 }
 
 /**
@@ -451,7 +451,7 @@ export async function handleTimezoneGeolocation(ctx: any, data: any) {
   const timezone = parseTimezoneFromCoordinates(location.latitude, location.longitude);
 
   // Save timezone to user profile
-  await apiClient.updateMe(ctx, { timezone: timezone.offset });
+  await apiClient.updateMe(ctx, { timezone: timezone.name });
 
   // Remove keyboard
   const processingMsg = await ctx.reply(t('transaction.loading', lang), {
@@ -467,7 +467,7 @@ export async function handleTimezoneGeolocation(ctx: any, data: any) {
   await ctx.deleteMessage(processingMsg.message_id).catch(() => { });
 
   // Show Screen 11: Create account and complete
-  await completeOnboarding(ctx, data, lang, timezone.offset);
+  await completeOnboarding(ctx, data, lang, timezone.name);
 }
 
 /**

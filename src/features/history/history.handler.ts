@@ -15,6 +15,7 @@ import {
 import { stateManager } from '../../core/state/state.manager';
 import { buildCloseButton } from '../menu/menu.handler';
 import { Language, t } from '../../shared/utils/i18n';
+import { config } from '../../core/config/env';
 
 const TRANSACTIONS_PER_PAGE = 5;
 
@@ -224,6 +225,10 @@ function buildHistoryKeyboard(
   if (navRow.length > 0) {
     buttons.push(navRow);
   }
+
+  // WebApp button
+  const webAppUrl = `${config.miniAppUrl}/history`;
+  buttons.push([Markup.button.webApp(t('history.open_webapp', lang), webAppUrl)]);
 
   // Close button instead of back to menu
   buttons.push([buildCloseButton(lang)]);

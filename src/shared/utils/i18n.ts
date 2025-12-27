@@ -305,6 +305,7 @@ export const messages = {
       delete_error: '❌ Не удалось удалить транзакцию',
       delete_yes: '✅ Да, удалить',
       delete_cancel: '❌ Отмена',
+      open_webapp: '📱 Открыть в приложении',
     },
 
     currency: {
@@ -678,6 +679,7 @@ Birinchi tranzaksiyani qo'shing:
       delete_error: '❌ Tranzaksiyani o\'chirib bo\'lmadi',
       delete_yes: '✅ Ha, o\'chirish',
       delete_cancel: '❌ Bekor qilish',
+      open_webapp: '📱 Ilovada ochish',
     },
 
     currency: {

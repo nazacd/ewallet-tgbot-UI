@@ -2,6 +2,7 @@ import { Markup } from 'telegraf';
 import { BotContext } from '../../core/types';
 import { t, Language } from '../../shared/utils/i18n';
 import { apiClient } from '../../services/api.client';
+import { config } from '../../core/config/env';
 
 /**
  * Shows the main menu with ReplyKeyboard
@@ -62,9 +63,8 @@ export async function showMainMenu(
  */
 export function buildReplyKeyboard(lang: Language) {
   return Markup.keyboard([
-    [Markup.button.text(t('menu.accounts', lang)), Markup.button.text(t('menu.transaction', lang))],
-    [Markup.button.text(t('menu.history', lang)), Markup.button.text(t('menu.stats', lang))],
-    [Markup.button.text(t('menu.settings', lang))],
+    [Markup.button.text(t('menu.accounts', lang)), Markup.button.webApp(t('menu.history', lang), `${config.miniAppUrl}/history`)],
+    [Markup.button.webApp(t('menu.stats', lang), `${config.miniAppUrl}/stats`), Markup.button.text(t('menu.settings', lang))],
   ])
     .resize() // resize_keyboard: true
     .persistent(); // one_time_keyboard: false

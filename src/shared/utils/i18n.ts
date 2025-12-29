@@ -139,6 +139,13 @@ export const messages = {
 • Кофе 5000
 • Ужин 50000
 • Зарплата 5000000`,
+      history_prompt: `Просмотрите полную историю всех ваших транзакций.
+
+💡 <i>В приложении доступны фильтры по датам, категориям, счетам и поиск по тексту.</i>`,
+      stats_prompt: `Анализируйте свои финансы с помощью наглядных графиков и диаграмм.
+
+💡 <i>Выбирайте период, фильтруйте по счетам и отслеживайте категории расходов.</i>`,
+      open_webapp: '📱 Открыть приложение',
     },
 
     settings: {
@@ -513,6 +520,13 @@ Matn ✏️, ovoz 🎤 yoki chek rasmi 📸 yuboring
 • Kofe 5000
 • Kechki ovqat 50000
 • Oylik 5000000`,
+      history_prompt: `Barcha tranzaksiyalaringizning to'liq tarixini ko'ring.
+
+💡 <i>Ilovada sanalar, kategoriyalar, hisoblar bo'yicha filtrlar va matn qidiruvi mavjud.</i>`,
+      stats_prompt: `Moliyaviy holatni aniq grafiklar va diagrammalar yordamida tahlil qiling.
+
+💡 <i>Davr tanlang, hisoblar bo'yicha filtrlang va xarajat kategoriyalarini kuzating.</i>`,
+      open_webapp: '📱 Ilovani ochish',
     },
 
     settings: {

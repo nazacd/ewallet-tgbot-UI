@@ -63,8 +63,8 @@ export async function showMainMenu(
  */
 export function buildReplyKeyboard(lang: Language) {
   return Markup.keyboard([
-    [Markup.button.text(t('menu.accounts', lang)), Markup.button.webApp(t('menu.history', lang), `${config.miniAppUrl}/history`)],
-    [Markup.button.webApp(t('menu.stats', lang), `${config.miniAppUrl}/stats`), Markup.button.text(t('menu.settings', lang))],
+    [Markup.button.text(t('menu.accounts', lang)), Markup.button.text(t('menu.history', lang))],
+    [Markup.button.text(t('menu.stats', lang)), Markup.button.text(t('menu.settings', lang))],
   ])
     .resize() // resize_keyboard: true
     .persistent(); // one_time_keyboard: false
@@ -104,11 +104,9 @@ export async function handleMenuButton(ctx: any, buttonText: string) {
   } else if (transactionTexts.includes(buttonText)) {
     await showAddTransactionHelp(ctx, lang);
   } else if (historyTexts.includes(buttonText)) {
-    const { historyHandler } = await import('../history/history.handler');
-    await historyHandler(ctx);
+    await showHistoryPrompt(ctx, lang);
   } else if (statsTexts.includes(buttonText)) {
-    const { showStatsSelection } = await import('../stats/stats.selection.handler');
-    await showStatsSelection(ctx);
+    await showStatsPrompt(ctx, lang);
   } else if (settingsTexts.includes(buttonText)) {
     const { showSettings } = await import('../settings/settings.handler');
     await showSettings(ctx);
@@ -124,6 +122,38 @@ async function showAddTransactionHelp(ctx: any, lang: Language) {
   await ctx.reply(message, {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([[buildCloseButton(lang)]]),
+  });
+}
+
+/**
+ * Show history prompt with inline buttons to open WebApp or close
+ */
+async function showHistoryPrompt(ctx: any, lang: Language) {
+  const message = `<b>${t('menu.history', lang)}</b>\n\n${t('menu.history_prompt', lang)}`;
+  const webAppUrl = `${config.miniAppUrl}/history`;
+
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.webApp(t('menu.open_webapp', lang), webAppUrl)],
+      [buildCloseButton(lang)],
+    ]),
+  });
+}
+
+/**
+ * Show stats prompt with inline buttons to open WebApp or close
+ */
+async function showStatsPrompt(ctx: any, lang: Language) {
+  const message = `<b>${t('menu.stats', lang)}</b>\n\n${t('menu.stats_prompt', lang)}`;
+  const webAppUrl = `${config.miniAppUrl}/stats`;
+
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.webApp(t('menu.open_webapp', lang), webAppUrl)],
+      [buildCloseButton(lang)],
+    ]),
   });
 }
 

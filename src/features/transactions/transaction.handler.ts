@@ -174,6 +174,7 @@ export async function confirmTransactionCallback(ctx: BotContext) {
     const transaction = await apiClient.createTransaction(ctx, {
       account_id: data.accountId,
       category_id: parsed.category_id,
+      subcategory_id: parsed.subcategory_id,
       type: parsed.type,
       amount: parsed.amount,
       currency_code: parsed.currency || currencyCode,

@@ -345,7 +345,12 @@ export const messages = {
       category_not_found: '❌ Категория не найдена',
 
       saved: '✅ Транзакция сохранена!',
+      deleted: '🗑 Транзакция удалена!',
       canceled: '❌ Транзакция отменена',
+      delete: '🗑 Удалить транзакцию',
+      delete_confirm: '⚠️ Вы уверены, что хотите удалить эту транзакцию?',
+      delete_success: '✅ Транзакция удалена',
+      delete_error: '❌ Не удалось удалить транзакцию',
 
       account_balance: 'Баланс',
       category_updated: '✅ Категория обновлена',
@@ -726,7 +731,12 @@ Birinchi tranzaksiyani qo'shing:
       category_not_found: `❌ Kategoriya topilmadi`,
 
       saved: `✅ Tranzaksiya saqlandi!`,
+      deleted: `🗑 Tranzaksiya o'chirildi!`,
       canceled: `❌ Tranzaksiya bekor qilindi`,
+      delete: `🗑 Tranzaksiyani o'chirish`,
+      delete_confirm: `⚠️ Ushbu tranzaksiyani o'chirmoqchimisiz?`,
+      delete_success: `✅ Tranzaksiya o'chirildi`,
+      delete_error: `❌ Tranzaksiyani o'chirib bo'lmadi`,
 
       account_balance: 'Balans',
       category_updated: '✅ Kategoriya yangilandi',

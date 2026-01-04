@@ -13,6 +13,7 @@ import {
   transactionHandler,
   confirmTransactionCallback,
   cancelTransactionCallback,
+  deleteTransactionCallback,
   backToConfirmCallback,
   handleWebAppData,
 } from '../features/transactions/transaction.handler';
@@ -170,8 +171,8 @@ export class BotApp {
 
     // Transaction callbacks
     bot.action('tx_confirm', confirmTransactionCallback);
-
     bot.action('tx_cancel', cancelTransactionCallback);
+    bot.action(/^tx_delete_(.+)$/, deleteTransactionCallback);
     bot.action('tx_back', backToConfirmCallback);  // Still needed for WebApp editor back button
     // Deprecated inline keyboard editing handlers removed - now using WebApp
     // bot.action('tx_edit_amount', editAmountCallback);

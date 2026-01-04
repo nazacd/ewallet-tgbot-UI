@@ -196,7 +196,7 @@ export async function confirmTransactionCallback(ctx: BotContext) {
     const category = categories.find((c) => c.id === parsed.category_id);
     const subcategory = subcategories.find((s) => s.id === parsed.subcategory_id);
 
-    const finalText = buildSavedTransactionMessage({
+    const { message: finalText, keyboard } = buildSavedTransactionMessage({
       transaction,
       currencyCode,
       accountName: account.name,
@@ -209,6 +209,7 @@ export async function confirmTransactionCallback(ctx: BotContext) {
 
     await updateOrReply(ctx, finalText, {
       parse_mode: 'HTML',
+      ...keyboard,
     });
 
     await stateManager.clearState(tgUserId);
@@ -233,7 +234,7 @@ function buildSavedTransactionMessage(options: {
   accountBalance?: number;
   lang: Language;
   timezone?: string;
-}) {
+}): { message: string; keyboard: any } {
   const {
     transaction,
     currencyCode,
@@ -260,6 +261,79 @@ function buildSavedTransactionMessage(options: {
 
   let message = '';
   message += `<b>${t('transaction.saved', lang)}</b>\n\n`;
+
+  if (accountBalance !== undefined) {
+    message += `💳 <b>${t('transaction.account_balance', lang)}:</b> ${formatAmount(accountBalance, currencyCode)}\n\n`;
+  }
+  message += '---\n';
+
+  message += `\n${typeText}\n`;
+
+  message += `💰 <b>${t('transaction.amount', lang)}:</b> ${formattedAmount}\n`;
+  // ✅ If conversion exists, show original + rate
+  const hasFx =
+    transaction.original_amount !== undefined &&
+    !!transaction.original_currency_code &&
+    transaction.original_currency_code !== transaction.currency_code;
+
+  if (hasFx) {
+    message += `💱 <b>Original</b>: ${formatAmount(transaction.original_amount!, transaction.original_currency_code!)} ${transaction.original_currency_code}\n`;
+    if (transaction.fx_rate) {
+      message += `📈 <b>FX</b>: ${formatFxRate(transaction.fx_rate)} (${transaction.original_currency_code} → ${currencyCode})\n`;
+    }
+  }
+  message += `📁 <b>${t('transaction.category', lang)}:</b> ${categoryText}\n`;
+  message += `📊 <b>${t('transaction.account', lang)}:</b> ${accountName}\n`;
+  message += `📅 <b>${t('transaction.date', lang)}:</b> ${dateStr}\n`;
+
+  if (transaction.note) {
+    message += `\n📝 <b>${t('transaction.note', lang)}:</b>\n`;
+    message += `<code>${escapeHtml(transaction.note)}</code>\n`;
+  }
+
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback(t('transaction.delete', lang), `tx_delete_${transaction.id}`)]
+  ]);
+
+  return { message, keyboard };
+}
+
+function buildDeletedTransactionMessage(options: {
+  transaction: Transaction;
+  currencyCode: string;
+  accountName: string;
+  categoryName: string;
+  emoji?: string;
+  accountBalance?: number;
+  lang: Language;
+  timezone?: string;
+}): string {
+  const {
+    transaction,
+    currencyCode,
+    accountName,
+    categoryName,
+    emoji,
+    accountBalance,
+    lang,
+    timezone,
+  } = options;
+  const typeText =
+    transaction.type === 'deposit'
+      ? t('transaction.new_deposit', lang)
+      : t('transaction.new_expense', lang);
+
+  const categoryText = categoryName
+    ? `${getCategoryEmoji(emoji)} ${escapeHtml(categoryName)}`
+    : `📌 ${t('transaction.category', lang)}`; // Fallback
+
+  const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
+  const dateStr = formatDate(transaction.created_at, { timezone, locale });
+
+  const formattedAmount = formatAmount(transaction.amount, transaction.currency_code || 'USD');
+
+  let message = '';
+  message += `<b>${t('transaction.deleted', lang)}</b>\n\n`;
 
   if (accountBalance !== undefined) {
     message += `💳 <b>${t('transaction.account_balance', lang)}:</b> ${formatAmount(accountBalance, currencyCode)}\n\n`;
@@ -351,6 +425,78 @@ export async function cancelTransactionCallback(ctx: BotContext) {
   });
 
   await stateManager.clearState(user.tg_user_id);
+}
+
+// Delete transaction callback
+export async function deleteTransactionCallback(ctx: BotContext) {
+  await ctx.answerCbQuery();
+
+  const user = await apiClient.getMe(ctx);
+  const lang = (user.language_code || 'ru') as Language;
+  const currencyCode = user.currency_code || 'USD';
+  const timezone = user.timezone;
+
+  // Extract transaction ID from callback data (format: tx_delete_<id>)
+  const callbackQuery = ctx.callbackQuery;
+  if (!callbackQuery || !('data' in callbackQuery)) {
+    await updateOrReply(ctx, t('transaction.delete_error', lang));
+    return;
+  }
+
+  const callbackData = callbackQuery.data;
+  if (!callbackData || !callbackData.startsWith('tx_delete_')) {
+    await updateOrReply(ctx, t('transaction.delete_error', lang));
+    return;
+  }
+
+  const transactionId = callbackData.replace('tx_delete_', '');
+
+  try {
+    // Fetch transaction details before deletion
+    const transaction = await apiClient.getTransaction(ctx, transactionId);
+
+    // Fetch account details
+    const accounts = await apiClient.getAccounts(ctx);
+    const account = accounts.find((a) => a.id === transaction.account_id);
+
+    if (!account) {
+      await updateOrReply(ctx, t('transaction.account_not_found', lang));
+      return;
+    }
+
+    // Delete the transaction
+    await apiClient.deleteTransaction(ctx, transactionId);
+
+    // Fetch updated account balance after deletion
+    const updatedAccounts = await apiClient.getAccounts(ctx);
+    const updatedAccount = updatedAccounts.find((a) => a.id === transaction.account_id);
+
+    // Fetch categories to display in the message
+    const categories = await apiClient.getCategories(ctx);
+    const subcategories = await apiClient.getSubcategories(ctx);
+
+    const category = categories.find((c) => c.id === transaction.category_id);
+    const subcategory = subcategories.find((s) => s.id === transaction.subcategory_id);
+
+    // Build the detailed message for deleted transaction
+    const finalText = buildDeletedTransactionMessage({
+      transaction,
+      currencyCode,
+      accountName: account.name,
+      categoryName: subcategory ? subcategory.name : (category?.name || ''),
+      emoji: subcategory?.emoji || category?.emoji,
+      accountBalance: updatedAccount?.balance,
+      lang,
+      timezone,
+    });
+
+    await updateOrReply(ctx, finalText, {
+      parse_mode: 'HTML',
+    });
+  } catch (error: any) {
+    console.error('Transaction deletion error:', error);
+    await updateOrReply(ctx, t('transaction.delete_error', lang));
+  }
 }
 
 // Back to confirmation callback (still needed for WebApp editor back button)

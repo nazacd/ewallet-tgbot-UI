@@ -1,12 +1,10 @@
 import { apiClient } from '../../services/api.client';
 import { stateManager } from '../../core/state/state.manager';
 import {
-  buildConfirmationKeyboard,
-  buildTransactionSummary,
-  withProgressMessage,
-} from '../../shared/utils/messages';
+  buildConfirmationMessage,
+} from './transaction.handler';
+import { withProgressMessage } from '../../shared/utils/messages';
 import { t, Language } from '../../shared/utils/i18n';
-import { getCategoryEmoji } from '../../shared/utils/format';
 
 export async function voiceHandler(ctx: any) {
   let lang: Language = 'ru';
@@ -36,51 +34,28 @@ export async function voiceHandler(ctx: any) {
       apiClient.parseVoice(ctx, fileUrl),
     );
 
-    const categories = await apiClient.getCategories(ctx);
-    const subcategories = await apiClient.getSubcategories(ctx);
-
-    // Logic: if parsed has subcategory_id, try to find it
-    let category = categories.find((c) => c.id === parsed.category_id);
-    let subcategory = subcategories.find((s) => s.id === parsed.subcategory_id);
-
-    // If API returned a subcategory but no category_id, try to resolve category from subcategory
-    if (subcategory && !category) {
-      category = categories.find(c => c.id === subcategory?.category_id);
-    }
-
-    const displayEmoji = subcategory?.emoji
-      ? subcategory.emoji
-      : (category?.emoji
-        ? category.emoji
-        : getCategoryEmoji(category?.emoji));
-
-    const displayName = subcategory
-      ? `${category?.name ? category.name + ' > ' : ''}${subcategory.name}`
-      : category?.name;
-
     let selectedAccount = defaultAccount;
     if (parsed.account_id) {
       selectedAccount = accounts.find((a) => a.id === parsed.account_id) || defaultAccount;
     }
 
-    const message = buildTransactionSummary({
-      parsed,
-      currencyCode,
-      categoryName: displayName,
-      categoryEmoji: displayEmoji,
-      accountName: selectedAccount.name,
-      lang,
-      timezone: user.timezone,
+    const data = {
+      parsedTransaction: parsed,
+      accountId: selectedAccount.id,
+    };
+
+    const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
+
+    const message = await ctx.reply(summary, {
+      parse_mode: 'HTML',
+      ...keyboard,
     });
 
     await stateManager.setState(user.tg_user_id, 'WAIT_TRANSACTION_CONFIRM', {
-      parsedTransaction: parsed,
-      accountId: selectedAccount.id,
-    });
-
-    await ctx.reply(message, {
-      parse_mode: 'HTML',
-      ...buildConfirmationKeyboard({ allowFurtherEdits: true, lang }),
+      ...data,
+      parsedTransactionMessage: {
+        message_id: message.message_id,
+      },
     });
   } catch (error: any) {
     console.error('Transaction parse error:', error);

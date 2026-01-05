@@ -153,7 +153,7 @@ export async function handleFirstExpenseInput(ctx: any, data: any) {
     await showTutorialConfirmation(ctx, parsed, lang);
   } catch (error: any) {
     console.error('Tutorial expense parse error:', error);
-    await ctx.reply(t('onboarding.errors.parse_expense', lang));
+    await ctx.reply(t('onboarding.errors.parse_expense', lang), { parse_mode: 'HTML' });
   }
 }
 

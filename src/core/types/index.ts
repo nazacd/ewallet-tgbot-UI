@@ -179,3 +179,151 @@ export interface DashboardData {
   incomeChart?: Buffer;
   accountName?: string;
 }
+
+// Debt Types
+export interface Debt {
+  id: string;
+  user_id: string;
+  transaction_id: string;
+  type: 'borrow' | 'lend';
+  status: 'open' | 'paid' | 'cancelled';
+  name: string;
+  amount: number;
+  currency_code: string;
+  note?: string;
+  due_at?: string;
+  paid_at?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface DebtsResponse {
+  items: Debt[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+}
+
+// Advanced Stats Types
+export interface AccountStats {
+  account_id: string;
+  account_name: string;
+  total_income: number;
+  total_expense: number;
+  net_change: number;
+  transaction_count: number;
+}
+
+export interface AccountStatsView {
+  accounts: AccountStats[];
+  totals: {
+    total_income: number;
+    total_expense: number;
+    net_change: number;
+  };
+}
+
+export interface CategoryStats {
+  category_id: number;
+  category_name: string;
+  category_emoji?: string;
+  total: number;
+  transaction_count: number;
+  percentage: number;
+}
+
+export interface CategoryStatsView {
+  categories: CategoryStats[];
+  total: number;
+}
+
+export interface SubcategoryStats {
+  subcategory_id: number;
+  subcategory_name: string;
+  subcategory_emoji?: string;
+  category_id: number;
+  category_name: string;
+  category_emoji?: string;
+  total: number;
+  transaction_count: number;
+  percentage: number;
+}
+
+export interface SubcategoryStatsView {
+  subcategories: SubcategoryStats[];
+  total: number;
+}
+
+export interface PeriodStats {
+  total_income: number;
+  total_expense: number;
+  net_change: number;
+  transaction_count: number;
+}
+
+export interface CategoryChange {
+  category_id: number;
+  category_name: string;
+  category_emoji?: string;
+  base_amount: number;
+  compare_amount: number;
+  absolute_change: number;
+  percentage_change: number;
+}
+
+export interface StatsCompareView {
+  base_period: {
+    from: string;
+    to: string;
+    stats: PeriodStats;
+  };
+  compare_period: {
+    from: string;
+    to: string;
+    stats: PeriodStats;
+  };
+  changes: {
+    income_change: number;
+    income_change_percentage: number;
+    expense_change: number;
+    expense_change_percentage: number;
+  };
+  top_increases?: CategoryChange[];
+  top_decreases?: CategoryChange[];
+}
+
+export interface TimeseriesDataPoint {
+  date: string;
+  total_income: number;
+  total_expense: number;
+  net_change: number;
+  transaction_count: number;
+}
+
+export interface TimeseriesStatsView {
+  data: TimeseriesDataPoint[];
+  totals: {
+    total_income: number;
+    total_expense: number;
+    net_change: number;
+  };
+}
+
+export interface BalanceDataPoint {
+  date: string;
+  balance: number;
+}
+
+export interface AccountBalanceTimeseries {
+  account_id: string;
+  account_name: string;
+  data: BalanceDataPoint[];
+}
+
+export interface BalanceTimeseriesView {
+  mode: 'aggregate' | 'per_account';
+  aggregate_data?: BalanceDataPoint[];
+  account_data?: AccountBalanceTimeseries[];
+}

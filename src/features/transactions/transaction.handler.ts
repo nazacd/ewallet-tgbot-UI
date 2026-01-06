@@ -367,52 +367,6 @@ function buildDeletedTransactionMessage(options: {
   return message;
 }
 
-
-
-// Handle data sent back from WebApp
-export async function handleWebAppData(ctx: BotContext) {
-  try {
-    console.log(ctx.webAppData);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
-
-    // Parse the data sent from WebApp
-    const updatedData = JSON.parse(ctx.webAppData!.data.json());
-
-    // Get current state
-    const currentState = await stateManager.getData(ctx.from.id);
-
-    const data = {
-      parsedTransaction: updatedData,
-      accountId: updatedData.account_id || currentState.accountId,
-    };
-
-    // Update the parsed transaction with edited data
-    await stateManager.setState(ctx.from.id, 'WAIT_TRANSACTION_CONFIRM', data);
-
-    const { summary, keyboard } = await buildConfirmationMessage(data, ctx);
-
-    // Send updated confirmation message
-    const message = await ctx.reply(summary, {
-      parse_mode: 'HTML',
-      ...keyboard,
-    });
-
-    // Update state with new message ID
-    await stateManager.setState(ctx.from.id, 'WAIT_TRANSACTION_CONFIRM', {
-      ...data,
-      parsedTransactionMessage: {
-        message_id: message.message_id,
-      },
-    });
-  } catch (error) {
-    console.error('Failed to process WebApp data:', error);
-    const user = await apiClient.getMe(ctx);
-    const lang = (user.language_code || 'ru') as Language;
-    await ctx.reply(t('errors.critical', lang));
-  }
-}
-
 // Cancel transaction callback
 export async function cancelTransactionCallback(ctx: BotContext) {
   await ctx.answerCbQuery();

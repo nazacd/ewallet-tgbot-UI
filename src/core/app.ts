@@ -15,17 +15,7 @@ import {
   cancelTransactionCallback,
   deleteTransactionCallback,
   backToConfirmCallback,
-  handleWebAppData,
 } from '../features/transactions/transaction.handler';
-import {
-  historyHandler,
-  historyPageCallback,
-  historyViewCallback,
-  historyBackCallback,
-  historyDeleteAskCallback,
-  historyDeleteConfirmCallback,
-  historyDeleteCancelCallback,
-} from '../features/history/history.handler';
 import {
   accountsHandler,
   addAccountCallback,
@@ -38,22 +28,6 @@ import {
 } from '../features/accounts/accounts.handler';
 import { voiceHandler } from '../features/transactions/voice.handler';
 import { photoHandler } from '../features/transactions/photo.handler';
-import {
-  statsHandler,
-  statsCloseCallback,
-  statsPeriodMonthCallback,
-  statsPeriodWeekCallback,
-  statsPeriodDayCallback,
-  statsPeriodAllCallback,
-  statsNavigatePrevCallback,
-  statsNavigateNextCallback,
-} from '../features/stats/stats.handler';
-import {
-  showStatsSelection,
-  statsSelectOverallCallback,
-  statsSelectAccountCallback,
-  statsChangeAccountCallback,
-} from '../features/stats/stats.selection.handler';
 import { handleMenuButton, closeMessageCallback } from '../features/menu/menu.handler';
 import {
   showSettings,
@@ -64,7 +38,6 @@ import {
   backToSettingsCallback,
   settingsCloseCallback,
   settingsChangeTimezoneCallback,
-  handleTimezoneTextInputInSettings,
   handleTimezoneGeolocationInSettings,
 } from '../features/settings/settings.handler';
 
@@ -109,17 +82,9 @@ export class BotApp {
       await ctx.deleteMessage().catch(() => { });
       await startHandler(ctx);
     });
-    bot.command('stats', async (ctx) => {
-      await ctx.deleteMessage().catch(() => { });
-      await showStatsSelection(ctx);
-    });
     bot.command('settings', async (ctx) => {
       await ctx.deleteMessage().catch(() => { });
       await showSettings(ctx);
-    });
-    bot.command('history', async (ctx) => {
-      await ctx.deleteMessage().catch(() => { });
-      await historyHandler(ctx);
     });
     bot.command('accounts', async (ctx) => {
       await ctx.deleteMessage().catch(() => { });
@@ -151,35 +116,11 @@ export class BotApp {
     bot.action('settings_close', settingsCloseCallback);
     bot.action('settings_change_timezone', settingsChangeTimezoneCallback);
 
-    // Stats callbacks
-    bot.action('stats_close', statsCloseCallback);
-
-    // Stats selection callbacks
-    bot.action('stats_select_overall', statsSelectOverallCallback);
-    bot.action(/^stats_select_account_(.+)$/, statsSelectAccountCallback);
-    bot.action('stats_change_account', statsChangeAccountCallback);
-
-    // Stats period callbacks (compact format: s_p{m|w|d|a}_{compactAccId})
-    bot.action(/^s_pm_(.+)$/, statsPeriodMonthCallback); // s_pm_all or s_pm_8749ef70
-    bot.action(/^s_pw_(.+)$/, statsPeriodWeekCallback); // s_pw_all or s_pw_8749ef70
-    bot.action(/^s_pd_(.+)$/, statsPeriodDayCallback); // s_pd_all or s_pd_8749ef70
-    bot.action(/^s_pa_(.+)$/, statsPeriodAllCallback); // s_pa_all or s_pa_8749ef70
-
-    // Stats navigation callbacks (compact format: s_n{p|n}_{m|w|d}_{compactAccId}_{compactDate})
-    bot.action(/^s_np_([mwd])_(.+)_(\d{8})$/, statsNavigatePrevCallback); // s_np_m_all_20251207
-    bot.action(/^s_nn_([mwd])_(.+)_(\d{8})$/, statsNavigateNextCallback); // s_nn_m_all_20251207
-
     // Transaction callbacks
     bot.action('tx_confirm', confirmTransactionCallback);
     bot.action('tx_cancel', cancelTransactionCallback);
     bot.action(/^tx_delete_(.+)$/, deleteTransactionCallback);
     bot.action('tx_back', backToConfirmCallback);  // Still needed for WebApp editor back button
-    // Deprecated inline keyboard editing handlers removed - now using WebApp
-    // bot.action('tx_edit_amount', editAmountCallback);
-    // bot.action('tx_edit_category', editCategoryCallback);
-    // bot.action('tx_edit_account', editAccountCallback);
-    // bot.action(/^tx_select_category_(.+)$/, selectCategoryCallback);
-    // bot.action(/^tx_select_account_(.+)$/, selectAccountCallback);
 
     // Account callbacks
     bot.action('acc_add', addAccountCallback);
@@ -189,14 +130,6 @@ export class BotApp {
     bot.action(/^acc_default_(.+)$/, setDefaultAccountCallback);
     bot.action(/^acc_delete_(?!confirm_)(.+)$/, deleteAccountCallback);
     bot.action(/^acc_delete_confirm_(.+)$/, confirmDeleteAccountCallback);
-
-    // History callbacks
-    bot.action(/^history_page_(\d+)$/, historyPageCallback);
-    bot.action(/^history_view_(\d+)$/, historyViewCallback);
-    bot.action(/^history_back_(\d+)$/, historyBackCallback);
-    bot.action(/^history_delete_ask_(.+)_(\d+)$/, historyDeleteAskCallback);
-    bot.action(/^history_delete_confirm_(.+)_(\d+)$/, historyDeleteConfirmCallback);
-    bot.action(/^history_delete_cancel_(\d+)$/, historyDeleteCancelCallback);
 
     // =======================
     // Message handlers
@@ -290,9 +223,6 @@ export class BotApp {
         return;
       }
     });
-
-    // Handle WebApp data (when user sends data from WebApp)
-    bot.on('web_app_data', handleWebAppData);
   }
 
   private setupErrorHandling() {

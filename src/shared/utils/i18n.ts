@@ -384,6 +384,52 @@ export const messages = {
       cancel: '❌ Отменить',
     },
 
+    debt: {
+      detection_message_borrowed: `💰 <b>Обнаружен долг!</b>
+
+Вы заняли деньги. Хотите отслеживать это?`,
+
+      detection_message_lent: `💰 <b>Обнаружен долг!</b>
+
+Вы одолжили деньги. Хотите отслеживать это?`,
+
+      yes_track: '✅ Да, отслеживать',
+      no_track: '❌ Нет, не нужно',
+
+      confirmation_title: '📋 Подтверждение долга',
+      type: 'Тип',
+      type_borrow: '💸 Я занял(а)',
+      type_lend: '💰 Я одолжил(а)',
+      from_whom: 'От кого',
+      to_whom: 'Кому',
+      amount: 'Сумма',
+      remind: 'Напомнить',
+      note: 'Примечание',
+
+      remind_in_3d: 'через 3 дня',
+      remind_in_1w: 'через 1 неделю',
+      remind_in_2w: 'через 2 недели',
+      remind_in_1m: 'через 1 месяц',
+
+      confirm: '✅ Подтвердить',
+      cancel: '❌ Отменить',
+      edit_due_date: '📅 Изменить срок',
+
+      choose_due_date: '📅 <b>Выберите срок напоминания:</b>',
+      interval_3d: '3 дня',
+      interval_1w: '1 неделя',
+      interval_2w: '2 недели',
+      interval_1m: '1 месяц',
+
+      created: '✅ Долг сохранён!',
+      rejected: '❌ Отслеживание отменено',
+      canceled: '❌ Создание долга отменено',
+
+      outdated: '⚠️ Данные устарели. Попробуйте снова.',
+      parse_error: '❌ Не удалось распознать долг. Попробуйте снова.',
+      create_error: '❌ Не удалось создать долг. Попробуйте снова.',
+    },
+
     errors: {
       retry_hint: '💡 Попробуй ещё раз или используй /start для обновления',
       critical: '❌ Критическая ошибка. Напиши @AsaHero для поддержки.',
@@ -768,6 +814,52 @@ Buni sinab ko'ring:
       edit_more: '✏️ Yana',
       confirm: '✅ Saqlash',
       cancel: '❌ Bekor qilish',
+    },
+
+    debt: {
+      detection_message_borrowed: `💰 <b>Qarz aniqlandi!</b>
+
+Siz pul qarz oldingiz. Kuzatishni xohlaysizmi?`,
+
+      detection_message_lent: `💰 <b>Qarz aniqlandi!</b>
+
+Siz pul qarz berdingiz. Kuzatishni xohlaysizmi?`,
+
+      yes_track: '✅ Ha, kuzataman',
+      no_track: '❌ Yo\'q, kerak emas',
+
+      confirmation_title: '📋 Qarzni tasdiqlash',
+      type: 'Turi',
+      type_borrow: '💸 Men qarz oldim',
+      type_lend: '💰 Men qarz berdim',
+      from_whom: 'Kimdan',
+      to_whom: 'Kimga',
+      amount: 'Miqdor',
+      remind: 'Eslatma',
+      note: 'Izoh',
+
+      remind_in_3d: '3 kundan keyin',
+      remind_in_1w: '1 haftadan keyin',
+      remind_in_2w: '2 haftadan keyin',
+      remind_in_1m: '1 oydan keyin',
+
+      confirm: '✅ Tasdiqlash',
+      cancel: '❌ Bekor qilish',
+      edit_due_date: '📅 Muddatni o\'zgartirish',
+
+      choose_due_date: '📅 <b>Eslatma muddatini tanlang:</b>',
+      interval_3d: '3 kun',
+      interval_1w: '1 hafta',
+      interval_2w: '2 hafta',
+      interval_1m: '1 oy',
+
+      created: '✅ Qarz saqlandi!',
+      rejected: '❌ Kuzatuv bekor qilindi',
+      canceled: '❌ Qarz yaratish bekor qilindi',
+
+      outdated: '⚠️ Ma\'lumot eskirgan. Qayta urinib ko\'ring.',
+      parse_error: '❌ Qarzni tanib bo\'lmadi. Qayta urinib ko\'ring.',
+      create_error: '❌ Qarzni yaratib bo\'lmadi. Qayta urinib ko\'ring.',
     },
 
     errors: {

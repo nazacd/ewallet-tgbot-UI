@@ -118,6 +118,8 @@ export type BotState =
   | 'WAIT_TRANSACTION_EDIT_AMOUNT'
   | 'SETTINGS_TIMEZONE'
   | 'WAIT_TRANSACTION_EDIT_CATEGORY'
+  // Debt tracking states
+  | 'WAIT_DEBT_TRACKING'
   // Account management states
   | 'WAIT_ACCOUNT_NAME'
   | 'WAIT_ACCOUNT_BALANCE'
@@ -132,6 +134,13 @@ export interface StateData {
   };
   accountId?: string;
   transactionDraft?: Partial<Transaction>;
+
+  // Debt tracking data
+  debtTracking?: {
+    transaction_id: string;
+    transaction?: Transaction;
+    parsedDebt?: ParsedDebt;
+  };
 
   // New onboarding data
   language?: 'ru' | 'uz';
@@ -181,11 +190,23 @@ export interface DashboardData {
 }
 
 // Debt Types
+export type DebtType = 'borrow' | 'lend';
+
+export interface ParsedDebt {
+  type: DebtType;
+  counterparty_name: string;
+  amount: number;
+  currency: string;
+  note?: string;
+  due_at?: string;
+  confidence: number;
+}
+
 export interface Debt {
   id: string;
   user_id: string;
   transaction_id: string;
-  type: 'borrow' | 'lend';
+  type: DebtType;
   status: 'open' | 'paid' | 'cancelled';
   name: string;
   amount: number;

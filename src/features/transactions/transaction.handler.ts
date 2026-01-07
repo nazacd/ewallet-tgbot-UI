@@ -185,6 +185,15 @@ export async function confirmTransactionCallback(ctx: BotContext) {
       performed_at: parsed.performed_at,
     });
 
+    // Check if this is a debt transaction (category_id = 26)
+    const { checkDebtCategory, sendDebtDetectionMessage } = await import('../debts/debt.handler');
+    if (checkDebtCategory(transaction.category_id)) {
+      // Clear current state and trigger debt tracking flow
+      await stateManager.clearState(tgUserId);
+      await sendDebtDetectionMessage(ctx, transaction, lang);
+      return;
+    }
+
     // (если хочешь баланс – оставь как было)
     const updatedAccounts = await apiClient.getAccounts(ctx);
     const updatedAccount = updatedAccounts.find((a) => a.id === data.accountId);

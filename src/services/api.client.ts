@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { BotContext, Subcategory } from '../core/types';
+import { BotContext, ParsedDebt, Subcategory } from '../core/types';
 import { config } from '../core/config/env';
 import { authService } from './auth.service';
 import {
@@ -159,6 +159,20 @@ class APIClient {
       method: 'POST',
       url: '/parse/text',
       data: { content: text },
+    });
+  }
+
+  async parseDebtText(
+    ctx: any,
+    data: {
+      transaction_id: string,
+      content: string,
+    }
+  ): Promise<ParsedDebt> {
+    return this.request<ParsedDebt>(ctx, {
+      method: 'POST',
+      url: '/parse/debt/text',
+      data,
     });
   }
 

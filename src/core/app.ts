@@ -53,6 +53,17 @@ import {
   handleTimezoneGeolocation,
 } from '../features/onboarding/onboarding.handler';
 
+// Debt tracking handlers
+import {
+  handleDebtAcceptCallback,
+  handleDebtRejectCallback,
+  handleDebtConfirmCallback,
+  handleDebtCancelCallback,
+  handleEditDueDateCallback,
+  handleDueDateSelectionCallback,
+  handleBackToConfirmCallback as handleDebtBackToConfirmCallback,
+} from '../features/debts/debt.handler';
+
 export class BotApp {
   private bot: Telegraf<BotContext>;
   private httpServer?: Server;
@@ -121,6 +132,15 @@ export class BotApp {
     bot.action('tx_cancel', cancelTransactionCallback);
     bot.action(/^tx_delete_(.+)$/, deleteTransactionCallback);
     bot.action('tx_back', backToConfirmCallback);  // Still needed for WebApp editor back button
+
+    // Debt tracking callbacks
+    bot.action('debt_accept', handleDebtAcceptCallback);
+    bot.action('debt_reject', handleDebtRejectCallback);
+    bot.action('debt_confirm', handleDebtConfirmCallback);
+    bot.action('debt_cancel', handleDebtCancelCallback);
+    bot.action('debt_edit_due', handleEditDueDateCallback);
+    bot.action(/^debt_due_(.+)$/, handleDueDateSelectionCallback);
+    bot.action('debt_back_to_confirm', handleDebtBackToConfirmCallback);
 
     // Account callbacks
     bot.action('acc_add', addAccountCallback);

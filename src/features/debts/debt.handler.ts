@@ -261,7 +261,7 @@ export async function handleDebtConfirmCallback(ctx: BotContext) {
         message += `💼 <b>${t('debt.type', lang)}:</b> ${typeText}\n`;
         message += `👤 <b>${counterpartyLabel}:</b> ${escapeHtml(debt.name)}\n`;
         message += `💰 <b>${t('debt.amount', lang)}:</b> ${formatAmount(debt.amount, debt.currency_code)}\n`;
-        message += `� <b>${t('debt.remind', lang)}:</b> ${relativeTime}\n`;
+        message += `🔔 <b>${t('debt.remind', lang)}:</b> ${relativeTime}\n`;
 
         await updateOrReply(ctx, message, { parse_mode: 'HTML' });
         await stateManager.clearState(tgUserId);

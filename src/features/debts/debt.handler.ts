@@ -247,14 +247,21 @@ export async function handleDebtConfirmCallback(ctx: BotContext) {
         const typeText = debt.type === 'borrow'
             ? t('debt.type_borrow', lang)
             : t('debt.type_lend', lang);
-        const dueDateStr = formatDate(debt.due_at!, { timezone, locale });
+
+        // Use different label based on debt type
+        const counterpartyLabel = debt.type === 'borrow'
+            ? t('debt.from_whom', lang)  // От кого / Kimdan
+            : t('debt.to_whom', lang);   // Кому / Kimga
+
+
+        const relativeTime = getRelativeTimeText(debt.due_at!, lang);
 
         let message = '';
         message += `<b>${t('debt.created', lang)}</b>\n\n`;
         message += `💼 <b>${t('debt.type', lang)}:</b> ${typeText}\n`;
-        message += `👤 <b>${t('debt.counterparty', lang)}:</b> ${escapeHtml(debt.name)}\n`;
+        message += `👤 <b>${counterpartyLabel}:</b> ${escapeHtml(debt.name)}\n`;
         message += `💰 <b>${t('debt.amount', lang)}:</b> ${formatAmount(debt.amount, debt.currency_code)}\n`;
-        message += `📅 <b>${t('debt.due_date', lang)}:</b> ${dueDateStr}\n`;
+        message += `� <b>${t('debt.remind', lang)}:</b> ${relativeTime}\n`;
 
         await updateOrReply(ctx, message, { parse_mode: 'HTML' });
         await stateManager.clearState(tgUserId);

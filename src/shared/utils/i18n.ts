@@ -129,6 +129,7 @@ export const messages = {
       transaction: '➕ Добавить',
       history: '📜 История',
       stats: '📈 Статистика',
+      debts: '💳 Долги',
       settings: '⚙️ Настройки',
       main_prompt: '🏠 <b>Главное меню</b>',
       add_transaction_help: `➕ <b>Добавить транзакцию</b>
@@ -145,6 +146,9 @@ export const messages = {
       stats_prompt: `Анализируйте свои финансы с помощью наглядных графиков и диаграмм.
 
 💡 <i>Выбирайте период, фильтруйте по счетам и отслеживайте категории расходов.</i>`,
+      debts_prompt: `Управляйте вашими долгами и займами.
+
+💡 <i>Отслеживайте кому вы одолжили и у кого заняли, получайте напоминания о сроках.</i>`,
       open_webapp: '📱 Открыть приложение',
     },
 
@@ -427,6 +431,14 @@ export const messages = {
       rejected: '❌ Отслеживание отменено',
       canceled: '❌ Создание долга отменено',
 
+      paid: '✅ Оплачено',
+      remind_later: '🔔 Напомнить позже',
+      action_cancel: '❌ Отменить долг',
+      marked_paid: '✅ Долг отмечен как оплаченный!',
+      reminder_scheduled: '🔔 Напоминание перенесено.',
+      debt_canceled: '❌ Долг отменён.',
+      action_error: '❌ Не удалось выполнить действие. Попробуйте снова.',
+
       outdated: '⚠️ Данные устарели. Попробуйте снова.',
       parse_error: '❌ Не удалось распознать долг. Попробуйте снова.',
       create_error: '❌ Не удалось создать долг. Попробуйте снова.',
@@ -563,6 +575,7 @@ Endi shunchaki yozing yoki ovozli xabar yuboring! 🎤`,
       transaction: `➕ Qo\'shish`,
       history: '📜 Tarix',
       stats: '📈 Statistika',
+      debts: '💳 Qarzlar',
       settings: '⚙️ Sozlamalar',
       main_prompt: '🏠 <b>Asosiy menyu</b>',
       add_transaction_help: `➕ <b>Tranzaksiya qo'shish</b>
@@ -579,6 +592,9 @@ Matn ✏️, ovoz 🎤 yoki chek rasmi 📸 yuboring
       stats_prompt: `Moliyaviy holatni aniq grafiklar va diagrammalar yordamida tahlil qiling.
 
 💡 <i>Davr tanlang, hisoblar bo'yicha filtrlang va xarajat kategoriyalarini kuzating.</i>`,
+      debts_prompt: `Qarzlaringiz va qarz berganlaringizni boshqaring.
+
+💡 <i>Kimga qarz berganingiz va kimdan qarz olganingizni kuzating, muddatlar haqida eslatmalar oling.</i>`,
       open_webapp: '📱 Ilovani ochish',
     },
 
@@ -860,6 +876,14 @@ Siz pul qarz berdingiz. Kuzatishni xohlaysizmi?`,
       created: '✅ Qarz saqlandi!',
       rejected: '❌ Kuzatuv bekor qilindi',
       canceled: '❌ Qarz yaratish bekor qilindi',
+
+      paid: '✅ To\'landi',
+      remind_later: '🔔 Keyinroq eslatish',
+      action_cancel: '❌ Qarzni bekor qilish',
+      marked_paid: '✅ Qarz to\'langan deb belgilandi!',
+      reminder_scheduled: '🔔 Eslatma ko\'chirildi.',
+      debt_canceled: '❌ Qarz bekor qilindi.',
+      action_error: '❌ Amalni bajarib bo\'lmadi. Qayta urinib ko\'ring.',
 
       outdated: '⚠️ Ma\'lumot eskirgan. Qayta urinib ko\'ring.',
       parse_error: '❌ Qarzni tanib bo\'lmadi. Qayta urinib ko\'ring.',

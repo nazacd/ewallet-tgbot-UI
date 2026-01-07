@@ -64,7 +64,8 @@ export async function showMainMenu(
 export function buildReplyKeyboard(lang: Language) {
   return Markup.keyboard([
     [Markup.button.text(t('menu.accounts', lang)), Markup.button.text(t('menu.history', lang))],
-    [Markup.button.text(t('menu.stats', lang)), Markup.button.text(t('menu.settings', lang))],
+    [Markup.button.text(t('menu.stats', lang)), Markup.button.text(t('menu.debts', lang))],
+    [Markup.button.text(t('menu.settings', lang))],
   ])
     .resize() // resize_keyboard: true
     .persistent(); // one_time_keyboard: false
@@ -96,6 +97,7 @@ export async function handleMenuButton(ctx: any, buttonText: string) {
   const transactionTexts = [t('menu.transaction', 'ru'), t('menu.transaction', 'uz')];
   const historyTexts = [t('menu.history', 'ru'), t('menu.history', 'uz')];
   const statsTexts = [t('menu.stats', 'ru'), t('menu.stats', 'uz')];
+  const debtsTexts = [t('menu.debts', 'ru'), t('menu.debts', 'uz')];
   const settingsTexts = [t('menu.settings', 'ru'), t('menu.settings', 'uz')];
 
   if (accountsTexts.includes(buttonText)) {
@@ -107,6 +109,8 @@ export async function handleMenuButton(ctx: any, buttonText: string) {
     await showHistoryPrompt(ctx, lang);
   } else if (statsTexts.includes(buttonText)) {
     await showStatsPrompt(ctx, lang);
+  } else if (debtsTexts.includes(buttonText)) {
+    await showDebtsPrompt(ctx, lang);
   } else if (settingsTexts.includes(buttonText)) {
     const { showSettings } = await import('../settings/settings.handler');
     await showSettings(ctx);
@@ -147,6 +151,22 @@ async function showHistoryPrompt(ctx: any, lang: Language) {
 async function showStatsPrompt(ctx: any, lang: Language) {
   const message = `<b>${t('menu.stats', lang)}</b>\n\n${t('menu.stats_prompt', lang)}`;
   const webAppUrl = `${config.miniAppUrl}/stats`;
+
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.webApp(t('menu.open_webapp', lang), webAppUrl)],
+      [buildCloseButton(lang)],
+    ]),
+  });
+}
+
+/**
+ * Show debts prompt with inline buttons to open WebApp or close
+ */
+async function showDebtsPrompt(ctx: any, lang: Language) {
+  const message = `<b>${t('menu.debts', lang)}</b>\n\n${t('menu.debts_prompt', lang)}`;
+  const webAppUrl = `${config.miniAppUrl}/debts`;
 
   await ctx.reply(message, {
     parse_mode: 'HTML',

@@ -62,6 +62,9 @@ import {
   handleEditDueDateCallback,
   handleDueDateSelectionCallback,
   handleBackToConfirmCallback as handleDebtBackToConfirmCallback,
+  handleDebtPaidCallback,
+  handleDebtRemindLaterCallback,
+  handleDebtActionCancelCallback,
 } from '../features/debts/debt.handler';
 
 export class BotApp {
@@ -142,6 +145,11 @@ export class BotApp {
     bot.action(/^debt_due_(.+)$/, handleDueDateSelectionCallback);
     bot.action('debt_back_to_confirm', handleDebtBackToConfirmCallback);
 
+    // Debt action callbacks (from backend messages)
+    bot.action(/^debt_paid:(.+)$/, handleDebtPaidCallback);
+    bot.action(/^debt_remind_later:(.+)$/, handleDebtRemindLaterCallback);
+    bot.action(/^debt_cancel:(.+)$/, handleDebtActionCancelCallback);
+
     // Account callbacks
     bot.action('acc_add', addAccountCallback);
     bot.action('acc_manage', manageAccountsCallback);
@@ -169,6 +177,8 @@ export class BotApp {
         '📜 Tarix',
         '📈 Статистика',
         '📈 Statistika',
+        '💳 Долги',
+        '💳 Qarzlar',
         '⚙️ Настройки',
         '⚙️ Sozlamalar',
       ].includes(text);

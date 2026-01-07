@@ -229,8 +229,6 @@ export async function handleDebtConfirmCallback(ctx: BotContext) {
     try {
         const user = await apiClient.getMe(ctx);
         const lang = (user.language_code || 'ru') as Language;
-        const timezone = user.timezone;
-
         const parsedDebt = data.debtTracking.parsedDebt;
 
         // Create debt via API
@@ -243,7 +241,6 @@ export async function handleDebtConfirmCallback(ctx: BotContext) {
         });
 
         // Show success message
-        const locale = lang === 'uz' ? 'uz-UZ' : 'ru-RU';
         const typeText = debt.type === 'borrow'
             ? t('debt.type_borrow', lang)
             : t('debt.type_lend', lang);
@@ -408,4 +405,123 @@ export async function handleBackToConfirmCallback(ctx: BotContext) {
         data.debtTracking.parsedDebt.due_at!,
         lang,
     );
+}
+
+/**
+ * Handle debt paid action from inline keyboard
+ */
+export async function handleDebtPaidCallback(ctx: BotContext) {
+    await ctx.answerCbQuery();
+
+    const callbackQuery = ctx.callbackQuery;
+    if (!callbackQuery || !('data' in callbackQuery)) {
+        return;
+    }
+
+    // Extract debt ID from callback data: "debt_paid:<debtID>"
+    const debtId = callbackQuery.data.replace('debt_paid:', '');
+
+    try {
+        const user = await apiClient.getMe(ctx);
+        const lang = (user.language_code || 'ru') as Language;
+
+        // Get default account for payment
+        const accounts = await apiClient.getAccounts(ctx);
+        const defaultAccount = accounts.find(acc => acc.is_default) || accounts[0];
+
+        if (!defaultAccount) {
+            await updateOrReply(ctx, t('debt.action_error', lang));
+            return;
+        }
+
+        // Mark debt as paid via API
+        await apiClient.payDebt(ctx, debtId, {
+            account_id: defaultAccount.id,
+        });
+
+        // Show success message
+        await updateOrReply(ctx, t('debt.marked_paid', lang), { parse_mode: 'HTML' });
+
+        // Delete the original message
+        await ctx.deleteMessage().catch(() => {});
+    } catch (error: any) {
+        console.error('Debt paid action error:', error);
+        const user = await apiClient.getMe(ctx);
+        const lang = (user.language_code || 'ru') as Language;
+        await updateOrReply(ctx, t('debt.action_error', lang));
+    }
+}
+
+/**
+ * Handle debt remind later action from inline keyboard
+ */
+export async function handleDebtRemindLaterCallback(ctx: BotContext) {
+    await ctx.answerCbQuery();
+
+    const callbackQuery = ctx.callbackQuery;
+    if (!callbackQuery || !('data' in callbackQuery)) {
+        return;
+    }
+
+    // Extract debt ID from callback data: "debt_remind_later:<debtID>"
+    const debtId = callbackQuery.data.replace('debt_remind_later:', '');
+
+    try {
+        const user = await apiClient.getMe(ctx);
+        const lang = (user.language_code || 'ru') as Language;
+
+        // Calculate new due date (1 week from now)
+        const newDueDate = new Date();
+        newDueDate.setDate(newDueDate.getDate() + 7);
+
+        // Update debt with new due date
+        await apiClient.updateDebt(ctx, debtId, {
+            due_at: newDueDate.toISOString(),
+        });
+
+        // Show success message
+        await updateOrReply(ctx, t('debt.reminder_scheduled', lang), { parse_mode: 'HTML' });
+
+        // Delete the original message
+        await ctx.deleteMessage().catch(() => {});
+    } catch (error: any) {
+        console.error('Debt remind later action error:', error);
+        const user = await apiClient.getMe(ctx);
+        const lang = (user.language_code || 'ru') as Language;
+        await updateOrReply(ctx, t('debt.action_error', lang));
+    }
+}
+
+/**
+ * Handle debt cancel action from inline keyboard (different from debt creation cancel)
+ */
+export async function handleDebtActionCancelCallback(ctx: BotContext) {
+    await ctx.answerCbQuery();
+
+    const callbackQuery = ctx.callbackQuery;
+    if (!callbackQuery || !('data' in callbackQuery)) {
+        return;
+    }
+
+    // Extract debt ID from callback data: "debt_cancel:<debtID>"
+    const debtId = callbackQuery.data.replace('debt_cancel:', '');
+
+    try {
+        const user = await apiClient.getMe(ctx);
+        const lang = (user.language_code || 'ru') as Language;
+
+        // Cancel debt via API
+        await apiClient.cancelDebt(ctx, debtId);
+
+        // Show success message
+        await updateOrReply(ctx, t('debt.debt_canceled', lang), { parse_mode: 'HTML' });
+
+        // Delete the original message
+        await ctx.deleteMessage().catch(() => {});
+    } catch (error: any) {
+        console.error('Debt cancel action error:', error);
+        const user = await apiClient.getMe(ctx);
+        const lang = (user.language_code || 'ru') as Language;
+        await updateOrReply(ctx, t('debt.action_error', lang));
+    }
 }

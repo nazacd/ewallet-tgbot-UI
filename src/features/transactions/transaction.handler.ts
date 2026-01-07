@@ -17,6 +17,7 @@ import {
 } from '../../shared/utils/messages';
 import { t, Language } from '../../shared/utils/i18n';
 import { config } from '../../core/config/env';
+import { checkDebtCategory, sendDebtDetectionMessage } from '../debts/debt.handler';
 
 export async function buildConfirmationMessage(data: any, ctx: BotContext) {
   const parsed = data.parsedTransaction;
@@ -185,15 +186,6 @@ export async function confirmTransactionCallback(ctx: BotContext) {
       performed_at: parsed.performed_at,
     });
 
-    // Check if this is a debt transaction (category_id = 26)
-    const { checkDebtCategory, sendDebtDetectionMessage } = await import('../debts/debt.handler');
-    if (checkDebtCategory(transaction.category_id)) {
-      // Clear current state and trigger debt tracking flow
-      await stateManager.clearState(tgUserId);
-      await sendDebtDetectionMessage(ctx, transaction, lang);
-      return;
-    }
-
     // (если хочешь баланс – оставь как было)
     const updatedAccounts = await apiClient.getAccounts(ctx);
     const updatedAccount = updatedAccounts.find((a) => a.id === data.accountId);
@@ -216,12 +208,20 @@ export async function confirmTransactionCallback(ctx: BotContext) {
       timezone,
     });
 
+    // Show transaction saved message with delete button
     await updateOrReply(ctx, finalText, {
       parse_mode: 'HTML',
       ...keyboard,
     });
 
+    // Clear transaction state
     await stateManager.clearState(tgUserId);
+
+    // AFTER showing the transaction confirmation, check if this is a debt transaction
+    if (checkDebtCategory(transaction.category_id)) {
+      // Send debt detection message as a NEW message (not editing the previous one)
+      await sendDebtDetectionMessage(ctx, transaction, lang);
+    }
   } catch (error: any) {
     console.error('Transaction creation error:', error);
     // We need to fetch user again or default to 'ru' if we can't

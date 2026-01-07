@@ -28,6 +28,7 @@ import {
 } from '../features/accounts/accounts.handler';
 import { voiceHandler } from '../features/transactions/voice.handler';
 import { photoHandler } from '../features/transactions/photo.handler';
+import { videoHandler } from '../features/transactions/video.handler';
 import { handleMenuButton, closeMessageCallback } from '../features/menu/menu.handler';
 import {
   showSettings,
@@ -233,6 +234,22 @@ export class BotApp {
       }
 
       await photoHandler(ctx);
+    });
+
+    bot.on('video', async (ctx) => {
+      const userId = ctx.from.id;
+
+      const handled = await stateManager.handleState(userId, ctx);
+      if (handled) return;
+
+      // Check if user is in onboarding
+      const currentState = await stateManager.getState(userId);
+      if (currentState && currentState.startsWith('ONBOARDING_')) {
+        await ctx.deleteMessage().catch(() => { });
+        return;
+      }
+
+      await videoHandler(ctx);
     });
 
     bot.on('location', async (ctx) => {

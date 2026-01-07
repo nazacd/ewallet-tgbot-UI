@@ -5,6 +5,7 @@ export interface SendMessageRequest {
   message: string;
   parseMode?: 'HTML' | 'Markdown';
   replyMarkup?: any;
+  videoId?: string;
 }
 
 export interface SendMessageResponse {

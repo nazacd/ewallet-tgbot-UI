@@ -55,7 +55,7 @@ export function createServer(bot: Telegraf<BotContext>) {
   // API endpoint for sending messages to users
   app.post('/api/send-message', async (req: Request, res: Response) => {
     try {
-      const { userId, message, parseMode, replyMarkup }: SendMessageRequest = req.body;
+      const { userId, message, parseMode, replyMarkup, videoId }: SendMessageRequest = req.body;
 
       if (!userId || !message) {
         return res.status(400).json({
@@ -64,10 +64,20 @@ export function createServer(bot: Telegraf<BotContext>) {
         } as SendMessageResponse);
       }
 
-      await bot.telegram.sendMessage(userId, message, {
-        parse_mode: parseMode,
-        reply_markup: replyMarkup,
-      });
+      // If videoId is provided, send video with caption
+      if (videoId) {
+        await bot.telegram.sendVideo(userId, videoId, {
+          caption: message,
+          parse_mode: parseMode,
+          reply_markup: replyMarkup,
+        });
+      } else {
+        // Otherwise send regular text message
+        await bot.telegram.sendMessage(userId, message, {
+          parse_mode: parseMode,
+          reply_markup: replyMarkup,
+        });
+      }
 
       res.json({
         success: true,

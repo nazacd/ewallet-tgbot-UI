@@ -101,8 +101,7 @@ export async function handleMenuButton(ctx: any, buttonText: string) {
   const settingsTexts = [t('menu.settings', 'ru'), t('menu.settings', 'uz')];
 
   if (accountsTexts.includes(buttonText)) {
-    const { accountsHandler } = await import('../accounts/accounts.handler');
-    await accountsHandler(ctx);
+    await showAccountsPrompt(ctx, lang);
   } else if (transactionTexts.includes(buttonText)) {
     await showAddTransactionHelp(ctx, lang);
   } else if (historyTexts.includes(buttonText)) {
@@ -112,8 +111,7 @@ export async function handleMenuButton(ctx: any, buttonText: string) {
   } else if (debtsTexts.includes(buttonText)) {
     await showDebtsPrompt(ctx, lang);
   } else if (settingsTexts.includes(buttonText)) {
-    const { showSettings } = await import('../settings/settings.handler');
-    await showSettings(ctx);
+    await showSettingsPrompt(ctx, lang);
   }
 }
 
@@ -167,6 +165,38 @@ async function showStatsPrompt(ctx: any, lang: Language) {
 async function showDebtsPrompt(ctx: any, lang: Language) {
   const message = `<b>${t('menu.debts', lang)}</b>\n\n${t('menu.debts_prompt', lang)}`;
   const webAppUrl = `${config.miniAppUrl}/debts`;
+
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.webApp(t('menu.open_webapp', lang), webAppUrl)],
+      [buildCloseButton(lang)],
+    ]),
+  });
+}
+
+/**
+ * Show accounts prompt with inline buttons to open WebApp or close
+ */
+async function showAccountsPrompt(ctx: any, lang: Language) {
+  const message = `<b>${t('menu.accounts', lang)}</b>\n\n${t('menu.accounts_prompt', lang)}`;
+  const webAppUrl = `${config.miniAppUrl}/accounts`;
+
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.webApp(t('menu.open_webapp', lang), webAppUrl)],
+      [buildCloseButton(lang)],
+    ]),
+  });
+}
+
+/**
+ * Show settings prompt with inline buttons to open WebApp or close
+ */
+async function showSettingsPrompt(ctx: any, lang: Language) {
+  const message = `<b>${t('menu.settings', lang)}</b>\n\n${t('menu.settings_prompt', lang)}`;
+  const webAppUrl = `${config.miniAppUrl}/settings`;
 
   await ctx.reply(message, {
     parse_mode: 'HTML',

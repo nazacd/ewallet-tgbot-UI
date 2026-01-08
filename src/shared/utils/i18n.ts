@@ -149,6 +149,12 @@ export const messages = {
       debts_prompt: `Управляйте вашими долгами и займами.
 
 💡 <i>Отслеживайте кому вы одолжили и у кого заняли, получайте напоминания о сроках.</i>`,
+      accounts_prompt: `Управляйте своими счетами и балансами.
+
+💡 <i>Создавайте счета, отслеживайте балансы и переключайтесь между ними.</i>`,
+      settings_prompt: `Настройте параметры приложения.
+
+💡 <i>Измените валюту, часовой пояс и счёт по умолчанию.</i>`,
       open_webapp: '📱 Открыть приложение',
     },
 
@@ -595,6 +601,12 @@ Matn ✏️, ovoz 🎤 yoki chek rasmi 📸 yuboring
       debts_prompt: `Qarzlaringiz va qarz berganlaringizni boshqaring.
 
 💡 <i>Kimga qarz berganingiz va kimdan qarz olganingizni kuzating, muddatlar haqida eslatmalar oling.</i>`,
+      accounts_prompt: `Hisoblaringiz va balanlaringizni boshqaring.
+
+💡 <i>Hisoblar yarating, balanslarni kuzating va ular orasida almashinish.</i>`,
+      settings_prompt: `Ilova sozlamalarini sozlang.
+
+💡 <i>Valyuta, vaqt mintaqasi va asosiy hisobni o'zgartiring.</i>`,
       open_webapp: '📱 Ilovani ochish',
     },
 
